@@ -6,6 +6,19 @@ interface PrinciplesViewProps {
   onAddPrinciple: (principle: Omit<Principle, 'id'>) => void;
 }
 
+function PrincipleList({ items, color }: { items: Principle[]; color: string }) {
+  return (
+    <ul className="space-y-2">
+      {items.map((principle) => (
+        <li key={principle.id} className="flex items-start">
+          <span className={`${color} mr-2`}>•</span>
+          <span className="text-slate-700">{principle.content}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newPrinciple, setNewPrinciple] = useState({ content: '', category: 'universal' as const });
@@ -24,17 +37,6 @@ export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewPro
   const universalPrinciples = principles.filter((p) => p.category === 'universal' || !p.category);
   const topPrinciples = principles.filter((p) => p.category === 'top');
   const bottomPrinciples = principles.filter((p) => p.category === 'bottom');
-
-  const PrincipleList = ({ items, color }: { items: Principle[]; color: string }) => (
-    <ul className="space-y-2">
-      {items.map((principle) => (
-        <li key={principle.id} className="flex items-start">
-          <span className={`${color} mr-2`}>•</span>
-          <span className="text-slate-700">{principle.content}</span>
-        </li>
-      ))}
-    </ul>
-  );
 
   return (
     <div className="max-w-4xl mx-auto p-4">
