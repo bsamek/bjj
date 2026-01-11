@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { Navigation } from './components/Navigation';
 import { PositionView } from './components/PositionView';
 import { PrinciplesView } from './components/PrinciplesView';
-import { useLocalStorage } from './hooks/useLocalStorage';
-import { initialData } from './data/initial-data';
-import type { AppData, Technique, Principle } from './types';
+import { AuthGate } from './components/AuthGate';
+import { useFirestore } from './hooks/useFirestore';
+import type { Technique, Principle } from './types';
 
-function App() {
-  const [data, setData] = useLocalStorage<AppData>('bjj-study-data', initialData);
+function AppContent({ userId }: { userId: string }) {
+  const { data, setData, loading, error } = useFirestore(userId);
   const [currentView, setCurrentView] = useState<'principles' | 'position'>('principles');
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(
     data.positions[0]?.id || null
@@ -96,6 +96,22 @@ function App() {
     }));
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-slate-500">Loading your data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-red-500">Error loading data: {error.message}</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <Navigation
@@ -121,6 +137,14 @@ function App() {
         ) : null}
       </main>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthGate>
+      {(userId) => <AppContent userId={userId} />}
+    </AuthGate>
   );
 }
 

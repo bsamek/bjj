@@ -6,7 +6,9 @@
       "Bash(npx tsc:*)",
       "Bash(npm run test:run:*)",
       "Bash(npm run dev:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)"
     ]
   }
 }
