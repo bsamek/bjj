@@ -4,7 +4,7 @@ import { PositionView } from './components/PositionView';
 import { PrinciplesView } from './components/PrinciplesView';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { initialData } from './data/initial-data';
-import { AppData, Technique, Principle } from './types';
+import type { AppData, Technique, Principle } from './types';
 
 function App() {
   const [data, setData] = useLocalStorage<AppData>('bjj-study-data', initialData);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Technique } from '../types';
+import type { Technique } from '../types';
 
 interface TechniqueCardProps {
   technique: Technique;

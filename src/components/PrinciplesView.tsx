@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Principle } from '../types';
+import type { Principle } from '../types';
 
 interface PrinciplesViewProps {
   principles: Principle[];

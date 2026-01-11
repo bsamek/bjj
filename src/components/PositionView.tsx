@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Position, Technique } from '../types';
+import type { Position, Technique } from '../types';
 import { TechniqueCard } from './TechniqueCard';
 
 interface PositionViewProps {
