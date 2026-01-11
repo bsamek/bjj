@@ -6,13 +6,25 @@ interface AuthGateProps {
   children: (userId: string) => React.ReactNode;
 }
 
+// Set this in .env.local to restrict access to your email only
+const ALLOWED_EMAIL = import.meta.env.VITE_ALLOWED_EMAIL;
+
 export function AuthGate({ children }: AuthGateProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && ALLOWED_EMAIL && user.email !== ALLOWED_EMAIL) {
+        // Wrong user - sign them out
+        await signOut(auth);
+        setUnauthorized(true);
+        setUser(null);
+      } else {
+        setUnauthorized(false);
+        setUser(user);
+      }
       setLoading(false);
     });
     return () => unsubscribe();
@@ -47,7 +59,11 @@ export function AuthGate({ children }: AuthGateProps) {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-lg shadow-md text-center">
           <h1 className="text-2xl font-bold text-slate-800 mb-4">BJJ Study</h1>
-          <p className="text-slate-600 mb-6">Sign in to access your training notes</p>
+          {unauthorized ? (
+            <p className="text-red-600 mb-6">Access denied. This app is private.</p>
+          ) : (
+            <p className="text-slate-600 mb-6">Sign in to access your training notes</p>
+          )}
           <button
             onClick={handleSignIn}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto"
