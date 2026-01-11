@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Pre-commit hook that runs the same checks as CI
+# This ensures your commit will pass CI before pushing
+
+set -e
+
+echo "Running pre-commit checks..."
+echo ""
+
+# Run linter
+echo "==> Running linter..."
+npm run lint
+echo ""
+
+# Run type check
+echo "==> Running type check..."
+npx tsc -b
+echo ""
+
+# Run tests
+echo "==> Running tests..."
+npm run test:run
+echo ""
+
+echo "All pre-commit checks passed!"
