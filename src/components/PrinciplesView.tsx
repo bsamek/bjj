@@ -8,7 +8,7 @@ interface PrinciplesViewProps {
 
 export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewProps) {
   const [isAdding, setIsAdding] = useState(false);
-  const [newPrinciple, setNewPrinciple] = useState({ content: '', category: 'universal' as const });
+  const [newPrinciple, setNewPrinciple] = useState<{ content: string; category: 'universal' | 'top' | 'bottom' }>({ content: '', category: 'universal' });
 
   const handleAdd = () => {
     if (newPrinciple.content.trim()) {

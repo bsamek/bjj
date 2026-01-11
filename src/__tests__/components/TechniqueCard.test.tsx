@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { TechniqueCard } from '../../components/TechniqueCard';
-import { Technique } from '../../types';
+import type { Technique } from '../../types';
 
 const mockTechnique: Technique = {
   id: 'tech-1',

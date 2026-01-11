@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { Navigation } from '../../components/Navigation';
-import { Position } from '../../types';
+import type { Position } from '../../types';
 
 const mockPositions: Position[] = [
   {
