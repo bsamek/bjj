@@ -1,4 +1,7 @@
-import { describe, it } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import App from '../../App';
 
 // App tests are skipped until Firebase mocking is set up
 // The App component now uses Firebase Auth and Firestore
