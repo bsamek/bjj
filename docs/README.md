@@ -23,4 +23,4 @@ A React application for Brazilian Jiu-Jitsu study and training. Track techniques
 
 ## Getting Started
 
-See the [Development Guide](Development.md) for setup instructions.
+See the [Development Guide](Development.md) for setup and deployment instructions.
