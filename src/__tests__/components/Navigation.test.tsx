@@ -2,127 +2,85 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi } from 'vitest';
 import { Navigation } from '../../components/Navigation';
-import type { Position } from '../../types';
-
-const mockPositions: Position[] = [
-  {
-    id: 'closed-guard',
-    name: 'Closed Guard',
-    top: { doFirst: [], techniques: [], transitions: [], notes: [] },
-    bottom: { doFirst: [], techniques: [], transitions: [], notes: [] },
-  },
-  {
-    id: 'side-control',
-    name: 'Side Control',
-    top: { doFirst: [], techniques: [], transitions: [], notes: [] },
-    bottom: { doFirst: [], techniques: [], transitions: [], notes: [] },
-  },
-];
 
 describe('Navigation', () => {
-  it('renders Principles button and Positions dropdown', () => {
-    render(
-      <Navigation
-        positions={mockPositions}
-        currentView="principles"
-        selectedPositionId={null}
-        onViewChange={vi.fn()}
-        onPositionSelect={vi.fn()}
-        onLogout={vi.fn()}
-      />
-    );
-
-    expect(screen.getByRole('button', { name: 'Principles' })).toBeInTheDocument();
-    expect(screen.getByRole('combobox')).toBeInTheDocument();
-  });
-
-  it('renders all positions in dropdown', () => {
-    render(
-      <Navigation
-        positions={mockPositions}
-        currentView="principles"
-        selectedPositionId={null}
-        onViewChange={vi.fn()}
-        onPositionSelect={vi.fn()}
-        onLogout={vi.fn()}
-      />
-    );
-
-    const select = screen.getByRole('combobox');
-    expect(select).toContainHTML('Closed Guard');
-    expect(select).toContainHTML('Side Control');
-  });
-
-  it('calls onViewChange when Principles clicked', async () => {
-    const user = userEvent.setup();
-    const onViewChange = vi.fn();
-
-    render(
-      <Navigation
-        positions={mockPositions}
-        currentView="position"
-        selectedPositionId="closed-guard"
-        onViewChange={onViewChange}
-        onPositionSelect={vi.fn()}
-        onLogout={vi.fn()}
-      />
-    );
-
-    await user.click(screen.getByRole('button', { name: 'Principles' }));
-    expect(onViewChange).toHaveBeenCalledWith('principles');
-  });
-
-  it('calls onPositionSelect and onViewChange when position selected', async () => {
-    const user = userEvent.setup();
-    const onViewChange = vi.fn();
-    const onPositionSelect = vi.fn();
-
-    render(
-      <Navigation
-        positions={mockPositions}
-        currentView="principles"
-        selectedPositionId={null}
-        onViewChange={onViewChange}
-        onPositionSelect={onPositionSelect}
-        onLogout={vi.fn()}
-      />
-    );
-
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'side-control');
-
-    expect(onPositionSelect).toHaveBeenCalledWith('side-control');
-    expect(onViewChange).toHaveBeenCalledWith('position');
-  });
-
-  it('shows selected position in dropdown', () => {
-    render(
-      <Navigation
-        positions={mockPositions}
-        currentView="position"
-        selectedPositionId="side-control"
-        onViewChange={vi.fn()}
-        onPositionSelect={vi.fn()}
-        onLogout={vi.fn()}
-      />
-    );
-
-    const select = screen.getByRole('combobox') as HTMLSelectElement;
-    expect(select.value).toBe('side-control');
-  });
-
   it('renders app title', () => {
     render(
       <Navigation
-        positions={mockPositions}
-        currentView="principles"
-        selectedPositionId={null}
-        onViewChange={vi.fn()}
-        onPositionSelect={vi.fn()}
         onLogout={vi.fn()}
+        onMenuToggle={vi.fn()}
+        isMenuOpen={false}
       />
     );
 
     expect(screen.getByText('BJJ Study')).toBeInTheDocument();
+  });
+
+  it('renders logout button', () => {
+    render(
+      <Navigation
+        onLogout={vi.fn()}
+        onMenuToggle={vi.fn()}
+        isMenuOpen={false}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
+  });
+
+  it('calls onLogout when logout clicked', async () => {
+    const user = userEvent.setup();
+    const onLogout = vi.fn();
+
+    render(
+      <Navigation
+        onLogout={onLogout}
+        onMenuToggle={vi.fn()}
+        isMenuOpen={false}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }));
+    expect(onLogout).toHaveBeenCalled();
+  });
+
+  it('renders hamburger menu button for mobile', () => {
+    render(
+      <Navigation
+        onLogout={vi.fn()}
+        onMenuToggle={vi.fn()}
+        isMenuOpen={false}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
+  });
+
+  it('calls onMenuToggle when hamburger clicked', async () => {
+    const user = userEvent.setup();
+    const onMenuToggle = vi.fn();
+
+    render(
+      <Navigation
+        onLogout={vi.fn()}
+        onMenuToggle={onMenuToggle}
+        isMenuOpen={false}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(onMenuToggle).toHaveBeenCalled();
+  });
+
+  it('shows close icon when menu is open', () => {
+    render(
+      <Navigation
+        onLogout={vi.fn()}
+        onMenuToggle={vi.fn()}
+        isMenuOpen={true}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Close menu' })).toBeInTheDocument();
   });
 });

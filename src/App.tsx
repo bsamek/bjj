@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigation } from './components/Navigation';
+import { Sidebar } from './components/Sidebar';
 import { PositionView } from './components/PositionView';
 import { PrinciplesView } from './components/PrinciplesView';
 import { AuthGate } from './components/AuthGate';
@@ -12,6 +13,7 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(
     data.positions[0]?.id || null
   );
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const selectedPosition = data.positions.find((p) => p.id === selectedPositionId);
 
@@ -417,44 +419,74 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
       <Navigation
-        positions={data.positions}
-        currentView={currentView}
-        selectedPositionId={selectedPositionId}
-        onViewChange={setCurrentView}
-        onPositionSelect={setSelectedPositionId}
         onLogout={onLogout}
+        onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        isMenuOpen={isMobileMenuOpen}
       />
-      <main className="py-6">
-        {currentView === 'principles' ? (
-          <PrinciplesView
-            principles={data.principles}
-            onAddPrinciple={handleAddPrinciple}
-            onUpdatePrinciple={handleUpdatePrinciple}
-            onDeletePrinciple={handleDeletePrinciple}
+      <div className="flex flex-1">
+        {/* Desktop sidebar */}
+        <div className="hidden md:block">
+          <Sidebar
+            positions={data.positions}
+            currentView={currentView}
+            selectedPositionId={selectedPositionId}
+            onViewChange={setCurrentView}
+            onPositionSelect={setSelectedPositionId}
           />
-        ) : selectedPosition ? (
-          <PositionView
-            position={selectedPosition}
-            onAddTechnique={handleAddTechnique}
-            onAddTechniqueNote={handleAddTechniqueNote}
-            onAddPerspectiveNote={handleAddPerspectiveNote}
-            onAddDoFirst={handleAddDoFirst}
-            onUpdateDoFirst={handleUpdateDoFirst}
-            onDeleteDoFirst={handleDeleteDoFirst}
-            onAddTransition={handleAddTransition}
-            onUpdateTransition={handleUpdateTransition}
-            onDeleteTransition={handleDeleteTransition}
-            onUpdateTechnique={handleUpdateTechnique}
-            onDeleteTechnique={handleDeleteTechnique}
-            onUpdatePerspectiveNote={handleUpdatePerspectiveNote}
-            onDeletePerspectiveNote={handleDeletePerspectiveNote}
-            onUpdateTechniqueNote={handleUpdateTechniqueNote}
-            onDeleteTechniqueNote={handleDeleteTechniqueNote}
-          />
-        ) : null}
-      </main>
+        </div>
+
+        {/* Mobile sidebar overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 md:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <div className="absolute left-0 top-0 h-full">
+              <Sidebar
+                positions={data.positions}
+                currentView={currentView}
+                selectedPositionId={selectedPositionId}
+                onViewChange={setCurrentView}
+                onPositionSelect={setSelectedPositionId}
+                onClose={() => setIsMobileMenuOpen(false)}
+              />
+            </div>
+          </div>
+        )}
+
+        <main className="flex-1 py-6">
+          {currentView === 'principles' ? (
+            <PrinciplesView
+              principles={data.principles}
+              onAddPrinciple={handleAddPrinciple}
+              onUpdatePrinciple={handleUpdatePrinciple}
+              onDeletePrinciple={handleDeletePrinciple}
+            />
+          ) : selectedPosition ? (
+            <PositionView
+              position={selectedPosition}
+              onAddTechnique={handleAddTechnique}
+              onAddTechniqueNote={handleAddTechniqueNote}
+              onAddPerspectiveNote={handleAddPerspectiveNote}
+              onAddDoFirst={handleAddDoFirst}
+              onUpdateDoFirst={handleUpdateDoFirst}
+              onDeleteDoFirst={handleDeleteDoFirst}
+              onAddTransition={handleAddTransition}
+              onUpdateTransition={handleUpdateTransition}
+              onDeleteTransition={handleDeleteTransition}
+              onUpdateTechnique={handleUpdateTechnique}
+              onDeleteTechnique={handleDeleteTechnique}
+              onUpdatePerspectiveNote={handleUpdatePerspectiveNote}
+              onDeletePerspectiveNote={handleDeletePerspectiveNote}
+              onUpdateTechniqueNote={handleUpdateTechniqueNote}
+              onDeleteTechniqueNote={handleDeleteTechniqueNote}
+            />
+          ) : null}
+        </main>
+      </div>
     </div>
   );
 }

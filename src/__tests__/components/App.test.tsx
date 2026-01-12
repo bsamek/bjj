@@ -59,8 +59,7 @@ describe('App', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'side-control');
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
     expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
   });
@@ -70,8 +69,7 @@ describe('App', () => {
     await renderApp();
 
     // Go to position view
-    const select = screen.getByRole('combobox');
-    await user.selectOptions(select, 'side-control');
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
     // Go back to principles
     await user.click(screen.getByRole('button', { name: 'Principles' }));
@@ -110,11 +108,11 @@ describe('App', () => {
     await renderApp();
 
     // Go to Closed Guard
-    await user.selectOptions(screen.getByRole('combobox'), 'closed-guard');
+    await user.click(screen.getByRole('button', { name: 'Closed Guard' }));
     expect(screen.getByRole('heading', { name: 'Closed Guard' })).toBeInTheDocument();
 
     // Go to Mount
-    await user.selectOptions(screen.getByRole('combobox'), 'mount');
+    await user.click(screen.getByRole('button', { name: 'Mount' }));
     expect(screen.getByRole('heading', { name: 'Mount' })).toBeInTheDocument();
   });
 
@@ -123,7 +121,7 @@ describe('App', () => {
     await renderApp();
 
     // Go to position view
-    await user.selectOptions(screen.getByRole('combobox'), 'side-control');
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
     // Add technique
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
@@ -139,7 +137,7 @@ describe('App', () => {
     await renderApp();
 
     // Go to position view
-    await user.selectOptions(screen.getByRole('combobox'), 'closed-guard');
+    await user.click(screen.getByRole('button', { name: 'Closed Guard' }));
 
     // Find a technique and add a note
     const noteButtons = screen.getAllByRole('button', { name: '+ Note' });
@@ -154,7 +152,7 @@ describe('App', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    await user.selectOptions(screen.getByRole('combobox'), 'side-control');
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
     // Verify we're on Top tab (default)
     expect(screen.getByText(/Crossface/i)).toBeInTheDocument();
@@ -193,7 +191,7 @@ describe('App', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    await user.selectOptions(screen.getByRole('combobox'), 'mount');
+    await user.click(screen.getByRole('button', { name: 'Mount' }));
     await user.click(screen.getByRole('button', { name: 'Bottom' }));
 
     // Find the Notes section's Add Note button (usually last one)
@@ -254,7 +252,7 @@ describe('App Integration', () => {
     await renderApp();
 
     // Navigate to position
-    await user.selectOptions(screen.getByRole('combobox'), 'half-guard');
+    await user.click(screen.getByRole('button', { name: 'Half Guard' }));
 
     // Add technique
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
