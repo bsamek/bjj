@@ -40,6 +40,40 @@ npm run lint
 just deploy
 ```
 
+## Database Management
+
+The project includes a CLI script for managing Firestore data.
+
+### Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project
+3. Go to Project Settings > Service Accounts
+4. Click "Generate new private key"
+5. Save the file as `service-account.json` in the project root
+
+### Commands
+
+```bash
+# List all users and their data counts
+npm run db list-users
+
+# Export all data to db-dump.json
+npm run db dump
+
+# Export to a custom file
+npm run db dump my-backup.json
+
+# Restore data from a JSON file
+npm run db restore db-dump.json
+```
+
+### Backup and Restore Workflow
+
+1. Export current data: `npm run db dump`
+2. Edit `db-dump.json` as needed
+3. Apply changes: `npm run db restore db-dump.json`
+
 ## Pre-commit Hook
 
 This project includes a pre-commit hook that runs the same checks as CI:
