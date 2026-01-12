@@ -6,7 +6,7 @@ import { AuthGate } from './components/AuthGate';
 import { useFirestore } from './hooks/useFirestore';
 import type { Technique, Principle } from './types';
 
-function AppContent({ userId }: { userId: string }) {
+function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void }) {
   const { data, setData, loading, error } = useFirestore(userId);
   const [currentView, setCurrentView] = useState<'principles' | 'position'>('principles');
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(
@@ -120,6 +120,7 @@ function AppContent({ userId }: { userId: string }) {
         selectedPositionId={selectedPositionId}
         onViewChange={setCurrentView}
         onPositionSelect={setSelectedPositionId}
+        onLogout={onLogout}
       />
       <main className="py-6">
         {currentView === 'principles' ? (
@@ -143,7 +144,7 @@ function AppContent({ userId }: { userId: string }) {
 function App() {
   return (
     <AuthGate>
-      {(userId) => <AppContent userId={userId} />}
+      {(userId, onSignOut) => <AppContent userId={userId} onLogout={onSignOut} />}
     </AuthGate>
   );
 }
