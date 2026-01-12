@@ -28,6 +28,7 @@ describe('Navigation', () => {
         selectedPositionId={null}
         onViewChange={vi.fn()}
         onPositionSelect={vi.fn()}
+        onLogout={vi.fn()}
       />
     );
 
@@ -43,6 +44,7 @@ describe('Navigation', () => {
         selectedPositionId={null}
         onViewChange={vi.fn()}
         onPositionSelect={vi.fn()}
+        onLogout={vi.fn()}
       />
     );
 
@@ -99,6 +101,7 @@ describe('Navigation', () => {
         selectedPositionId="side-control"
         onViewChange={vi.fn()}
         onPositionSelect={vi.fn()}
+        onLogout={vi.fn()}
       />
     );
 
@@ -114,6 +117,7 @@ describe('Navigation', () => {
         selectedPositionId={null}
         onViewChange={vi.fn()}
         onPositionSelect={vi.fn()}
+        onLogout={vi.fn()}
       />
     );
 

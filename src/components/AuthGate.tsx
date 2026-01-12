@@ -3,7 +3,7 @@ import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebas
 import { auth, googleProvider } from '../firebase';
 
 interface AuthGateProps {
-  children: (userId: string) => React.ReactNode;
+  children: (userId: string, onSignOut: () => void) => React.ReactNode;
 }
 
 // Set this in .env.local to restrict access to your email only
@@ -93,15 +93,5 @@ export function AuthGate({ children }: AuthGateProps) {
     );
   }
 
-  return (
-    <>
-      {children(user.uid)}
-      <button
-        onClick={handleSignOut}
-        className="fixed bottom-4 right-4 px-3 py-1 text-sm text-slate-500 hover:text-slate-700 bg-white rounded shadow"
-      >
-        Sign out
-      </button>
-    </>
-  );
+  return <>{children(user.uid, handleSignOut)}</>;
 }

@@ -6,6 +6,7 @@ interface NavigationProps {
   selectedPositionId: string | null;
   onViewChange: (view: 'principles' | 'position') => void;
   onPositionSelect: (positionId: string) => void;
+  onLogout: () => void;
 }
 
 export function Navigation({
@@ -14,6 +15,7 @@ export function Navigation({
   selectedPositionId,
   onViewChange,
   onPositionSelect,
+  onLogout,
 }: NavigationProps) {
   return (
     <nav className="bg-slate-800 text-white p-4">
@@ -53,6 +55,12 @@ export function Navigation({
               ))}
             </select>
           </div>
+          <button
+            onClick={onLogout}
+            className="px-3 py-1 rounded text-slate-300 hover:text-white hover:bg-slate-700"
+          >
+            Log out
+          </button>
         </div>
       </div>
     </nav>
