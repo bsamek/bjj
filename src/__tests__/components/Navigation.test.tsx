@@ -64,6 +64,7 @@ describe('Navigation', () => {
         selectedPositionId="closed-guard"
         onViewChange={onViewChange}
         onPositionSelect={vi.fn()}
+        onLogout={vi.fn()}
       />
     );
 
@@ -83,6 +84,7 @@ describe('Navigation', () => {
         selectedPositionId={null}
         onViewChange={onViewChange}
         onPositionSelect={onPositionSelect}
+        onLogout={vi.fn()}
       />
     );
 
