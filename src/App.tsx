@@ -96,6 +96,294 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
     }));
   };
 
+  // Do First CRUD
+  const handleAddDoFirst = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    item: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                doFirst: [...pos[perspective].doFirst, item],
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleUpdateDoFirst = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number,
+    item: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                doFirst: pos[perspective].doFirst.map((d, i) =>
+                  i === index ? item : d
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleDeleteDoFirst = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                doFirst: pos[perspective].doFirst.filter((_, i) => i !== index),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  // Transitions CRUD
+  const handleAddTransition = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    item: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                transitions: [...pos[perspective].transitions, item],
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleUpdateTransition = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number,
+    item: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                transitions: pos[perspective].transitions.map((t, i) =>
+                  i === index ? item : t
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleDeleteTransition = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                transitions: pos[perspective].transitions.filter((_, i) => i !== index),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  // Technique Update/Delete
+  const handleUpdateTechnique = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    techniqueId: string,
+    updates: Partial<Technique>
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                techniques: pos[perspective].techniques.map((tech) =>
+                  tech.id === techniqueId ? { ...tech, ...updates } : tech
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleDeleteTechnique = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    techniqueId: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                techniques: pos[perspective].techniques.filter(
+                  (tech) => tech.id !== techniqueId
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  // Perspective Notes Update/Delete
+  const handleUpdatePerspectiveNote = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number,
+    note: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                notes: pos[perspective].notes.map((n, i) =>
+                  i === index ? note : n
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleDeletePerspectiveNote = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    index: number
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                notes: pos[perspective].notes.filter((_, i) => i !== index),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  // Technique Notes Update/Delete
+  const handleUpdateTechniqueNote = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    techniqueId: string,
+    index: number,
+    note: string
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                techniques: pos[perspective].techniques.map((tech) =>
+                  tech.id === techniqueId
+                    ? {
+                        ...tech,
+                        notes: tech.notes.map((n, i) => (i === index ? note : n)),
+                      }
+                    : tech
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
+  const handleDeleteTechniqueNote = (
+    positionId: string,
+    perspective: 'top' | 'bottom',
+    techniqueId: string,
+    index: number
+  ) => {
+    setData((prev) => ({
+      ...prev,
+      positions: prev.positions.map((pos) =>
+        pos.id === positionId
+          ? {
+              ...pos,
+              [perspective]: {
+                ...pos[perspective],
+                techniques: pos[perspective].techniques.map((tech) =>
+                  tech.id === techniqueId
+                    ? {
+                        ...tech,
+                        notes: tech.notes.filter((_, i) => i !== index),
+                      }
+                    : tech
+                ),
+              },
+            }
+          : pos
+      ),
+    }));
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -134,6 +422,18 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
             onAddTechnique={handleAddTechnique}
             onAddTechniqueNote={handleAddTechniqueNote}
             onAddPerspectiveNote={handleAddPerspectiveNote}
+            onAddDoFirst={handleAddDoFirst}
+            onUpdateDoFirst={handleUpdateDoFirst}
+            onDeleteDoFirst={handleDeleteDoFirst}
+            onAddTransition={handleAddTransition}
+            onUpdateTransition={handleUpdateTransition}
+            onDeleteTransition={handleDeleteTransition}
+            onUpdateTechnique={handleUpdateTechnique}
+            onDeleteTechnique={handleDeleteTechnique}
+            onUpdatePerspectiveNote={handleUpdatePerspectiveNote}
+            onDeletePerspectiveNote={handleDeletePerspectiveNote}
+            onUpdateTechniqueNote={handleUpdateTechniqueNote}
+            onDeleteTechniqueNote={handleDeleteTechniqueNote}
           />
         ) : null}
       </main>

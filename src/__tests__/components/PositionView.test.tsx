@@ -32,6 +32,18 @@ describe('PositionView', () => {
     onAddTechnique: vi.fn(),
     onAddTechniqueNote: vi.fn(),
     onAddPerspectiveNote: vi.fn(),
+    onAddDoFirst: vi.fn(),
+    onUpdateDoFirst: vi.fn(),
+    onDeleteDoFirst: vi.fn(),
+    onAddTransition: vi.fn(),
+    onUpdateTransition: vi.fn(),
+    onDeleteTransition: vi.fn(),
+    onUpdateTechnique: vi.fn(),
+    onDeleteTechnique: vi.fn(),
+    onUpdatePerspectiveNote: vi.fn(),
+    onDeletePerspectiveNote: vi.fn(),
+    onUpdateTechniqueNote: vi.fn(),
+    onDeleteTechniqueNote: vi.fn(),
   };
 
   it('renders position name as heading', () => {
@@ -192,5 +204,59 @@ describe('PositionView', () => {
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByPlaceholderText('Technique name')).not.toBeInTheDocument();
+  });
+
+  // Do First CRUD tests
+  it('shows "+ Add" button for Do First section', () => {
+    render(<PositionView {...defaultProps} />);
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    expect(addButtons.length).toBeGreaterThan(0);
+  });
+
+  it('opens Do First form when "+ Add" clicked', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]); // First "+ Add" is for Do First
+
+    expect(screen.getByPlaceholderText('Add a do first item...')).toBeInTheDocument();
+  });
+
+  it('calls onAddDoFirst on submit', async () => {
+    const user = userEvent.setup();
+    const onAddDoFirst = vi.fn();
+    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]);
+    await user.type(screen.getByPlaceholderText('Add a do first item...'), 'New do first item');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddDoFirst).toHaveBeenCalledWith('side-control', 'top', 'New do first item');
+  });
+
+  // Transitions CRUD tests
+  it('opens Transitions form when "+ Add" clicked', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]); // Second "+ Add" is for Transitions
+
+    expect(screen.getByPlaceholderText('Add a transition...')).toBeInTheDocument();
+  });
+
+  it('calls onAddTransition on submit', async () => {
+    const user = userEvent.setup();
+    const onAddTransition = vi.fn();
+    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]);
+    await user.type(screen.getByPlaceholderText('Add a transition...'), 'New transition');
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddTransition).toHaveBeenCalledWith('side-control', 'top', 'New transition');
   });
 });
