@@ -25,6 +25,22 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
     }));
   };
 
+  const handleUpdatePrinciple = (principleId: string, updates: Partial<Principle>) => {
+    setData((prev) => ({
+      ...prev,
+      principles: prev.principles.map((p) =>
+        p.id === principleId ? { ...p, ...updates } : p
+      ),
+    }));
+  };
+
+  const handleDeletePrinciple = (principleId: string) => {
+    setData((prev) => ({
+      ...prev,
+      principles: prev.principles.filter((p) => p.id !== principleId),
+    }));
+  };
+
   const handleAddTechnique = (
     positionId: string,
     perspective: 'top' | 'bottom',
@@ -415,6 +431,8 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
           <PrinciplesView
             principles={data.principles}
             onAddPrinciple={handleAddPrinciple}
+            onUpdatePrinciple={handleUpdatePrinciple}
+            onDeletePrinciple={handleDeletePrinciple}
           />
         ) : selectedPosition ? (
           <PositionView

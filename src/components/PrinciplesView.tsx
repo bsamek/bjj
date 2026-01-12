@@ -4,22 +4,153 @@ import type { Principle } from '../types';
 interface PrinciplesViewProps {
   principles: Principle[];
   onAddPrinciple: (principle: Omit<Principle, 'id'>) => void;
+  onUpdatePrinciple: (principleId: string, updates: Partial<Principle>) => void;
+  onDeletePrinciple: (principleId: string) => void;
 }
 
-function PrincipleList({ items, color }: { items: Principle[]; color: string }) {
+interface PrincipleItemProps {
+  principle: Principle;
+  color: string;
+  onUpdate: (principleId: string, updates: Partial<Principle>) => void;
+  onDelete: (principleId: string) => void;
+}
+
+function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(principle.content);
+  const [editedCategory, setEditedCategory] = useState<'universal' | 'top' | 'bottom'>(
+    principle.category || 'universal'
+  );
+
+  const handleSave = () => {
+    if (editedContent.trim()) {
+      onUpdate(principle.id, {
+        content: editedContent.trim(),
+        category: editedCategory,
+      });
+      setIsEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditedContent(principle.content);
+    setEditedCategory(principle.category || 'universal');
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <li className="bg-slate-50 p-3 rounded-lg space-y-2">
+        <input
+          type="text"
+          value={editedContent}
+          onChange={(e) => setEditedContent(e.target.value)}
+          className="w-full px-3 py-2 border border-slate-300 rounded"
+          autoFocus
+        />
+        <div className="flex gap-4 items-center">
+          <label className="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name={`category-${principle.id}`}
+              checked={editedCategory === 'universal'}
+              onChange={() => setEditedCategory('universal')}
+            />
+            Universal
+          </label>
+          <label className="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name={`category-${principle.id}`}
+              checked={editedCategory === 'top'}
+              onChange={() => setEditedCategory('top')}
+            />
+            Top
+          </label>
+          <label className="flex items-center gap-1 text-sm">
+            <input
+              type="radio"
+              name={`category-${principle.id}`}
+              checked={editedCategory === 'bottom'}
+              onChange={() => setEditedCategory('bottom')}
+            />
+            Bottom
+          </label>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSave}
+            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Save
+          </button>
+          <button
+            onClick={handleCancel}
+            className="px-3 py-1 text-slate-500 hover:text-slate-700"
+          >
+            Cancel
+          </button>
+        </div>
+      </li>
+    );
+  }
+
+  return (
+    <li className="flex items-start group">
+      <span className={`${color} mr-2`}>•</span>
+      <span className="text-slate-700 flex-1">{principle.content}</span>
+      <span className="opacity-0 group-hover:opacity-100 flex gap-1 ml-2">
+        <button
+          onClick={() => setIsEditing(true)}
+          className="text-slate-400 hover:text-blue-600 text-xs"
+          title="Edit"
+        >
+          Edit
+        </button>
+        <button
+          onClick={() => onDelete(principle.id)}
+          className="text-slate-400 hover:text-red-600 text-xs"
+          title="Delete"
+        >
+          Delete
+        </button>
+      </span>
+    </li>
+  );
+}
+
+function PrincipleList({
+  items,
+  color,
+  onUpdate,
+  onDelete,
+}: {
+  items: Principle[];
+  color: string;
+  onUpdate: (principleId: string, updates: Partial<Principle>) => void;
+  onDelete: (principleId: string) => void;
+}) {
   return (
     <ul className="space-y-2">
       {items.map((principle) => (
-        <li key={principle.id} className="flex items-start">
-          <span className={`${color} mr-2`}>•</span>
-          <span className="text-slate-700">{principle.content}</span>
-        </li>
+        <PrincipleItem
+          key={principle.id}
+          principle={principle}
+          color={color}
+          onUpdate={onUpdate}
+          onDelete={onDelete}
+        />
       ))}
     </ul>
   );
 }
 
-export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewProps) {
+export function PrinciplesView({
+  principles,
+  onAddPrinciple,
+  onUpdatePrinciple,
+  onDeletePrinciple,
+}: PrinciplesViewProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [newPrinciple, setNewPrinciple] = useState<{ content: string; category: 'universal' | 'top' | 'bottom' }>({ content: '', category: 'universal' });
 
@@ -111,7 +242,12 @@ export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewPro
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
             Universal
           </h3>
-          <PrincipleList items={universalPrinciples} color="text-blue-500" />
+          <PrincipleList
+            items={universalPrinciples}
+            color="text-blue-500"
+            onUpdate={onUpdatePrinciple}
+            onDelete={onDeletePrinciple}
+          />
         </section>
       )}
 
@@ -120,7 +256,12 @@ export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewPro
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
             When on Top
           </h3>
-          <PrincipleList items={topPrinciples} color="text-green-500" />
+          <PrincipleList
+            items={topPrinciples}
+            color="text-green-500"
+            onUpdate={onUpdatePrinciple}
+            onDelete={onDeletePrinciple}
+          />
         </section>
       )}
 
@@ -129,7 +270,12 @@ export function PrinciplesView({ principles, onAddPrinciple }: PrinciplesViewPro
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">
             When on Bottom
           </h3>
-          <PrincipleList items={bottomPrinciples} color="text-orange-500" />
+          <PrincipleList
+            items={bottomPrinciples}
+            color="text-orange-500"
+            onUpdate={onUpdatePrinciple}
+            onDelete={onDeletePrinciple}
+          />
         </section>
       )}
     </div>
