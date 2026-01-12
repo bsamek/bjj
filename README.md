@@ -34,6 +34,12 @@ npm run test:run    # Run tests once
 npm run lint
 ```
 
+### Deployment
+
+```bash
+just deploy
+```
+
 ## Pre-commit Hook
 
 This project includes a pre-commit hook that runs the same checks as CI:
