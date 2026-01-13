@@ -99,7 +99,7 @@ function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemPr
     <li className="flex items-start group">
       <span className={`${color} mr-2`}>•</span>
       <span className="text-slate-700 flex-1">{principle.content}</span>
-      <span className="opacity-0 group-hover:opacity-100 flex gap-1 ml-2">
+      <span className="hover-action flex gap-1 ml-2">
         <button
           onClick={() => setIsEditing(true)}
           className="text-slate-400 hover:text-blue-600 text-xs"

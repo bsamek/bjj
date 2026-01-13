@@ -121,12 +121,12 @@ export function TechniqueCard({
 
   return (
     <div className="bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-start group">
         <div className="flex-1">
           <h4 className="font-semibold text-slate-800">{technique.name}</h4>
           <p className="text-slate-600 text-sm mt-1">{technique.description}</p>
         </div>
-        <div className="flex gap-2 ml-2">
+        <div className="hover-action flex gap-2 ml-2">
           <button
             onClick={() => setIsAddingNote(true)}
             className="text-slate-400 hover:text-blue-600 text-sm"
