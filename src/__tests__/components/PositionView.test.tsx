@@ -511,7 +511,7 @@ describe('PositionView', () => {
     expect(props.techniqueHandlers.updateNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0, 'Updated note');
   });
 
-  it('calls techniqueHandlers.deleteNote when technique note is deleted', async () => {
+  it('calls techniqueHandlers.deleteNote when technique note is deleted and confirmed', async () => {
     const user = userEvent.setup();
     const props = createDefaultProps();
     render(<PositionView {...props} />);
@@ -522,6 +522,12 @@ describe('PositionView', () => {
     const deleteButton = buttons?.[1]; // Second button is delete
     expect(deleteButton).toBeInTheDocument();
     await user.click(deleteButton!);
+
+    // Confirmation dialog is shown - click Delete to confirm
+    expect(screen.getByText('Delete this item?')).toBeInTheDocument();
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(props.techniqueHandlers.deleteNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0);
   });

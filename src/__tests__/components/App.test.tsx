@@ -353,9 +353,14 @@ describe('App - Handler Coverage', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    // Delete a principle
+    // Delete a principle - first click shows confirmation
     const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(deleteButtons[0]);
+
+    // Confirm the delete
+    const confirmDialog = screen.getByText('Delete this principle?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(setDoc).toHaveBeenCalled();
   });
@@ -387,8 +392,14 @@ describe('App - Handler Coverage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
+    // First click shows confirmation
     const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(deleteButtons[0]);
+
+    // Confirm the delete
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(setDoc).toHaveBeenCalled();
   });
@@ -462,6 +473,12 @@ describe('App - Handler Coverage', () => {
     const deleteButton = transitionItem?.querySelectorAll('button')[1]; // Second button is delete
     if (deleteButton) {
       await user.click(deleteButton);
+
+      // Confirm the delete
+      const confirmDialog = screen.getByText('Delete this item?').closest('li');
+      const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+      await user.click(confirmDeleteBtn!);
+
       expect(setDoc).toHaveBeenCalled();
     }
   });
@@ -554,6 +571,11 @@ describe('App - Handler Coverage', () => {
     expect(deleteButton).toBeInTheDocument();
     await user.click(deleteButton);
 
+    // Confirm the delete
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
+
     expect(setDoc).toHaveBeenCalled();
     expect(screen.queryByText(/Mousetrap system/)).not.toBeInTheDocument();
   });
@@ -597,6 +619,11 @@ describe('App - Handler Coverage', () => {
     const deleteButton = buttons[1]; // Second button is delete
     expect(deleteButton).toBeInTheDocument();
     await user.click(deleteButton);
+
+    // Confirm the delete
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(setDoc).toHaveBeenCalled();
     expect(screen.queryByText(/fake the scissor sweep/)).not.toBeInTheDocument();

@@ -46,7 +46,7 @@ describe('EditableItem', () => {
     expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
-  it('calls onDelete when delete button clicked', async () => {
+  it('shows confirmation dialog when delete button clicked', async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
 
@@ -54,16 +54,67 @@ describe('EditableItem', () => {
 
     await user.click(screen.getByRole('button', { name: 'Delete' }));
 
+    // Should show confirmation dialog
+    expect(screen.getByText('Delete this item?')).toBeInTheDocument();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('calls onDelete when confirmed in delete dialog', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+
+    render(<EditableItem {...defaultProps} onDelete={onDelete} />);
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    // Now click Delete in confirmation dialog (red button)
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
+
     expect(onDelete).toHaveBeenCalled();
   });
 
-  it('calls onDelete when delete button clicked in border style', async () => {
+  it('dismisses confirmation dialog when cancel clicked', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+
+    render(<EditableItem {...defaultProps} onDelete={onDelete} />);
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(screen.getByText('Delete this item?')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Should be back to normal display
+    expect(screen.queryByText('Delete this item?')).not.toBeInTheDocument();
+    expect(screen.getByText('Test value')).toBeInTheDocument();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('shows confirmation dialog when delete button clicked in border style', async () => {
     const user = userEvent.setup();
     const onDelete = vi.fn();
 
     render(<EditableItem {...defaultProps} onDelete={onDelete} borderStyle />);
 
     await user.click(screen.getByRole('button', { name: 'Delete' }));
+
+    // Should show confirmation dialog
+    expect(screen.getByText('Delete this item?')).toBeInTheDocument();
+    expect(onDelete).not.toHaveBeenCalled();
+  });
+
+  it('calls onDelete when confirmed in border style', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+
+    render(<EditableItem {...defaultProps} onDelete={onDelete} borderStyle />);
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }));
+    // Now click Delete in confirmation dialog (red button)
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(onDelete).toHaveBeenCalled();
   });

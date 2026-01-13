@@ -17,6 +17,7 @@ interface PrincipleItemProps {
 
 function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editedContent, setEditedContent] = useState(principle.content);
   const [editedCategory, setEditedCategory] = useState<'universal' | 'top' | 'bottom'>(
     principle.category || 'universal'
@@ -36,6 +37,11 @@ function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemPr
     setEditedContent(principle.content);
     setEditedCategory(principle.category || 'universal');
     setIsEditing(false);
+  };
+
+  const handleDelete = () => {
+    onDelete(principle.id);
+    setIsConfirmingDelete(false);
   };
 
   if (isEditing) {
@@ -95,6 +101,26 @@ function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemPr
     );
   }
 
+  if (isConfirmingDelete) {
+    return (
+      <li className="flex items-center gap-2 border border-red-200 rounded px-3 py-2 bg-red-50">
+        <span className="text-slate-700 flex-1">Delete this principle?</span>
+        <button
+          onClick={handleDelete}
+          className="px-2 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
+        <button
+          onClick={() => setIsConfirmingDelete(false)}
+          className="px-2 py-1 text-sm text-slate-500 hover:text-slate-700"
+        >
+          Cancel
+        </button>
+      </li>
+    );
+  }
+
   return (
     <li className="flex items-start group">
       <span className={`${color} mr-2`}>•</span>
@@ -108,7 +134,7 @@ function PrincipleItem({ principle, color, onUpdate, onDelete }: PrincipleItemPr
           Edit
         </button>
         <button
-          onClick={() => onDelete(principle.id)}
+          onClick={() => setIsConfirmingDelete(true)}
           className="text-slate-400 hover:text-red-600 text-xs"
           title="Delete"
         >

@@ -213,7 +213,7 @@ describe('PrinciplesView', () => {
   });
 
   // Delete principle tests
-  it('calls onDeletePrinciple when Delete clicked', async () => {
+  it('shows confirmation dialog when Delete clicked', async () => {
     const user = userEvent.setup();
     const onDeletePrinciple = vi.fn();
     render(<PrinciplesView {...defaultProps} onDeletePrinciple={onDeletePrinciple} />);
@@ -221,7 +221,41 @@ describe('PrinciplesView', () => {
     const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
     await user.click(deleteButtons[0]);
 
+    // Should show confirmation dialog
+    expect(screen.getByText('Delete this principle?')).toBeInTheDocument();
+    expect(onDeletePrinciple).not.toHaveBeenCalled();
+  });
+
+  it('calls onDeletePrinciple when confirmed', async () => {
+    const user = userEvent.setup();
+    const onDeletePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onDeletePrinciple={onDeletePrinciple} />);
+
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+    await user.click(deleteButtons[0]);
+    // Now click Delete in confirmation dialog (it's now the only Delete button with bg-red-600 class)
+    const confirmDialog = screen.getByText('Delete this principle?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
+
     expect(onDeletePrinciple).toHaveBeenCalledWith('p1');
+  });
+
+  it('dismisses delete confirmation dialog when cancel clicked', async () => {
+    const user = userEvent.setup();
+    const onDeletePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onDeletePrinciple={onDeletePrinciple} />);
+
+    const deleteButtons = screen.getAllByRole('button', { name: 'Delete' });
+    await user.click(deleteButtons[0]);
+    expect(screen.getByText('Delete this principle?')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Should be back to normal display
+    expect(screen.queryByText('Delete this principle?')).not.toBeInTheDocument();
+    expect(screen.getByText('Get inside position')).toBeInTheDocument();
+    expect(onDeletePrinciple).not.toHaveBeenCalled();
   });
 
   // Edit category tests
