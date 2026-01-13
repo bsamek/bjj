@@ -103,7 +103,7 @@ export function EditableItem({
     return (
       <li className="text-slate-700 pl-3 border-l-2 border-slate-300 group flex items-start justify-between">
         <span className="flex-1">{value}</span>
-        <span className="opacity-0 group-hover:opacity-100 flex gap-1 ml-2">
+        <span className="hover-action flex gap-1 ml-2">
           <button
             onClick={() => setIsEditing(true)}
             className="text-slate-400 hover:text-blue-600 text-xs"
@@ -127,7 +127,7 @@ export function EditableItem({
     <li className="text-slate-700 flex items-start group">
       <span className={`${bulletColor} mr-2`}>{bulletChar}</span>
       <span className="flex-1">{value}</span>
-      <span className="opacity-0 group-hover:opacity-100 flex gap-1 ml-2">
+      <span className="hover-action flex gap-1 ml-2">
         <button
           onClick={() => setIsEditing(true)}
           className="text-slate-400 hover:text-blue-600 text-xs"

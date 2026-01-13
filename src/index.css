@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+@layer utilities {
+  /* Hover-action: visible on touch devices, hidden until hover on desktop */
+  .hover-action {
+    @apply opacity-100;
+  }
+
+  @media (hover: hover) {
+    .hover-action {
+      @apply opacity-0 transition-opacity;
+    }
+    .group:hover .hover-action {
+      @apply opacity-100;
+    }
+  }
+}
