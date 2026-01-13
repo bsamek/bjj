@@ -97,6 +97,42 @@ describe('PrinciplesView', () => {
     });
   });
 
+  it('allows clicking Universal radio in add mode after changing category', async () => {
+    const user = userEvent.setup();
+    const onAddPrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onAddPrinciple={onAddPrinciple} />);
+
+    await user.click(screen.getByRole('button', { name: '+ Add Principle' }));
+    await user.type(screen.getByPlaceholderText('Enter principle...'), 'Switching category');
+
+    // Change to Top first
+    await user.click(screen.getByLabelText('Top'));
+    // Then change back to Universal
+    await user.click(screen.getByLabelText('Universal'));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddPrinciple).toHaveBeenCalledWith({
+      content: 'Switching category',
+      category: 'universal',
+    });
+  });
+
+  it('allows setting bottom category in add mode', async () => {
+    const user = userEvent.setup();
+    const onAddPrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onAddPrinciple={onAddPrinciple} />);
+
+    await user.click(screen.getByRole('button', { name: '+ Add Principle' }));
+    await user.type(screen.getByPlaceholderText('Enter principle...'), 'Bottom principle');
+    await user.click(screen.getByLabelText('Bottom'));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddPrinciple).toHaveBeenCalledWith({
+      content: 'Bottom principle',
+      category: 'bottom',
+    });
+  });
+
   it('rejects empty/whitespace input', async () => {
     const user = userEvent.setup();
     const onAddPrinciple = vi.fn();
@@ -186,5 +222,120 @@ describe('PrinciplesView', () => {
     await user.click(deleteButtons[0]);
 
     expect(onDeletePrinciple).toHaveBeenCalledWith('p1');
+  });
+
+  // Edit category tests
+  it('allows changing category in edit mode', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    // Edit a universal principle and change to top
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+    await user.click(editButtons[0]); // First principle is 'Get inside position' (universal)
+
+    // Change category to Top
+    await user.click(screen.getByLabelText('Top'));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdatePrinciple).toHaveBeenCalledWith('p1', {
+      content: 'Get inside position',
+      category: 'top',
+    });
+  });
+
+  it('allows changing category to bottom in edit mode', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+    await user.click(editButtons[0]);
+
+    // Change category to Bottom
+    await user.click(screen.getByLabelText('Bottom'));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdatePrinciple).toHaveBeenCalledWith('p1', {
+      content: 'Get inside position',
+      category: 'bottom',
+    });
+  });
+
+  it('rejects empty content in edit mode', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+    await user.click(editButtons[0]);
+    await user.clear(screen.getByDisplayValue('Get inside position'));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdatePrinciple).not.toHaveBeenCalled();
+  });
+
+  it('reverts to original values on cancel', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    const editButtons = screen.getAllByRole('button', { name: 'Edit' });
+    await user.click(editButtons[0]);
+
+    // Make changes
+    await user.clear(screen.getByDisplayValue('Get inside position'));
+    await user.type(screen.getByRole('textbox'), 'Changed');
+    await user.click(screen.getByLabelText('Bottom'));
+
+    // Cancel
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Verify original text is back
+    expect(screen.getByText('Get inside position')).toBeInTheDocument();
+    expect(onUpdatePrinciple).not.toHaveBeenCalled();
+  });
+
+  it('allows clicking Universal when editing a top principle', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    // Find the 'top' principle "Apply pressure" (p2) and its edit button
+    // Principles are grouped by category, so order is: Universal (p1, p4), Top (p2), Bottom (p3)
+    const applyPressureItem = screen.getByText('Apply pressure').closest('li');
+    const editButton = applyPressureItem?.querySelector('button');
+    expect(editButton).toBeInTheDocument();
+    await user.click(editButton!);
+
+    // Change category to Universal
+    await user.click(screen.getByLabelText('Universal'));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdatePrinciple).toHaveBeenCalledWith('p2', {
+      content: 'Apply pressure',
+      category: 'universal',
+    });
+  });
+
+  it('handles cancel on principle without category', async () => {
+    const user = userEvent.setup();
+    const onUpdatePrinciple = vi.fn();
+    render(<PrinciplesView {...defaultProps} onUpdatePrinciple={onUpdatePrinciple} />);
+
+    // p4 "Keep arms close" has no category - find it and click edit
+    const keepArmsItem = screen.getByText('Keep arms close').closest('li');
+    const editButton = keepArmsItem?.querySelector('button');
+    expect(editButton).toBeInTheDocument();
+    await user.click(editButton!);
+
+    // Make a change then cancel
+    await user.clear(screen.getByRole('textbox'));
+    await user.type(screen.getByRole('textbox'), 'Changed text');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    // Should revert to original and not call update
+    expect(screen.getByText('Keep arms close')).toBeInTheDocument();
+    expect(onUpdatePrinciple).not.toHaveBeenCalled();
   });
 });

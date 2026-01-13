@@ -259,4 +259,260 @@ describe('PositionView', () => {
 
     expect(onAddTransition).toHaveBeenCalledWith('side-control', 'top', 'New transition');
   });
+
+  // Keyboard shortcuts
+  it('adds do first item on Enter key', async () => {
+    const user = userEvent.setup();
+    const onAddDoFirst = vi.fn();
+    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]);
+    await user.type(screen.getByPlaceholderText('Add a do first item...'), 'Enter item{Enter}');
+
+    expect(onAddDoFirst).toHaveBeenCalledWith('side-control', 'top', 'Enter item');
+  });
+
+  it('closes do first form on Escape key', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]);
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByPlaceholderText('Add a do first item...')).not.toBeInTheDocument();
+  });
+
+  it('adds transition on Enter key', async () => {
+    const user = userEvent.setup();
+    const onAddTransition = vi.fn();
+    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]);
+    await user.type(screen.getByPlaceholderText('Add a transition...'), 'Enter transition{Enter}');
+
+    expect(onAddTransition).toHaveBeenCalledWith('side-control', 'top', 'Enter transition');
+  });
+
+  it('closes transition form on Escape key', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]);
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByPlaceholderText('Add a transition...')).not.toBeInTheDocument();
+  });
+
+  it('adds note on Enter key', async () => {
+    const user = userEvent.setup();
+    const onAddPerspectiveNote = vi.fn();
+    render(<PositionView {...defaultProps} onAddPerspectiveNote={onAddPerspectiveNote} />);
+
+    const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
+    await user.click(addNoteButtons[addNoteButtons.length - 1]);
+    await user.type(screen.getByPlaceholderText('Add a note...'), 'Enter note{Enter}');
+
+    expect(onAddPerspectiveNote).toHaveBeenCalledWith('side-control', 'top', 'Enter note');
+  });
+
+  it('closes note form on Escape key', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
+    await user.click(addNoteButtons[addNoteButtons.length - 1]);
+    await user.keyboard('{Escape}');
+
+    expect(screen.queryByPlaceholderText('Add a note...')).not.toBeInTheDocument();
+  });
+
+  // Cancel button tests
+  it('closes do first form on Cancel', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByPlaceholderText('Add a do first item...')).not.toBeInTheDocument();
+  });
+
+  it('closes transition form on Cancel', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]);
+    // There will be two Cancel buttons now (DoFirst and Transitions section)
+    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
+    await user.click(cancelButtons[cancelButtons.length - 1]);
+
+    expect(screen.queryByPlaceholderText('Add a transition...')).not.toBeInTheDocument();
+  });
+
+  it('closes note form on Cancel', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
+    await user.click(addNoteButtons[addNoteButtons.length - 1]);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByPlaceholderText('Add a note...')).not.toBeInTheDocument();
+  });
+
+  // Empty value rejection
+  it('rejects empty do first item', async () => {
+    const user = userEvent.setup();
+    const onAddDoFirst = vi.fn();
+    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[0]);
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddDoFirst).not.toHaveBeenCalled();
+  });
+
+  it('rejects empty transition', async () => {
+    const user = userEvent.setup();
+    const onAddTransition = vi.fn();
+    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+
+    const addButtons = screen.getAllByRole('button', { name: '+ Add' });
+    await user.click(addButtons[1]);
+    // Click Add on the transition form
+    const addFormButtons = screen.getAllByRole('button', { name: 'Add' });
+    await user.click(addFormButtons[addFormButtons.length - 1]);
+
+    expect(onAddTransition).not.toHaveBeenCalled();
+  });
+
+  it('rejects empty perspective note', async () => {
+    const user = userEvent.setup();
+    const onAddPerspectiveNote = vi.fn();
+    render(<PositionView {...defaultProps} onAddPerspectiveNote={onAddPerspectiveNote} />);
+
+    const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
+    await user.click(addNoteButtons[addNoteButtons.length - 1]);
+    await user.click(screen.getByRole('button', { name: 'Add' }));
+
+    expect(onAddPerspectiveNote).not.toHaveBeenCalled();
+  });
+
+  // Empty state messages
+  it('shows "No items yet" when doFirst is empty', () => {
+    const emptyPosition = {
+      ...mockPosition,
+      top: { ...mockPosition.top, doFirst: [] },
+    };
+    render(<PositionView {...defaultProps} position={emptyPosition} />);
+
+    expect(screen.getByText('No items yet')).toBeInTheDocument();
+  });
+
+  it('shows "No transitions yet" when transitions is empty', async () => {
+    const emptyPosition = {
+      ...mockPosition,
+      top: { ...mockPosition.top, transitions: [] },
+    };
+    render(<PositionView {...defaultProps} position={emptyPosition} />);
+
+    expect(screen.getByText('No transitions yet')).toBeInTheDocument();
+  });
+
+  // Tab click when already active
+  it('allows clicking Top tab when already on Top', async () => {
+    const user = userEvent.setup();
+    render(<PositionView {...defaultProps} />);
+
+    // Default is Top, click Top again
+    await user.click(screen.getByRole('button', { name: 'Top' }));
+
+    // Should still show top content
+    expect(screen.getByText('Crossface + far underhook')).toBeInTheDocument();
+  });
+
+  // Technique CRUD callback tests
+  it('calls onUpdateTechnique when technique is updated', async () => {
+    const user = userEvent.setup();
+    const onUpdateTechnique = vi.fn();
+    render(<PositionView {...defaultProps} onUpdateTechnique={onUpdateTechnique} />);
+
+    // Find the technique edit button via title (first one is Americana)
+    const editButtons = screen.getAllByTitle('Edit technique');
+    await user.click(editButtons[0]);
+
+    const nameInput = screen.getByPlaceholderText('Technique name');
+    await user.clear(nameInput);
+    await user.type(nameInput, 'Updated Americana');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdateTechnique).toHaveBeenCalledWith('side-control', 'top', 't1', {
+      name: 'Updated Americana',
+      description: 'Figure-four grip',
+    });
+  });
+
+  it('calls onDeleteTechnique when technique is deleted', async () => {
+    const user = userEvent.setup();
+    const onDeleteTechnique = vi.fn();
+    render(<PositionView {...defaultProps} onDeleteTechnique={onDeleteTechnique} />);
+
+    // Find technique delete button via title (first one is Americana)
+    const deleteButtons = screen.getAllByTitle('Delete technique');
+    await user.click(deleteButtons[0]);
+
+    // In confirmation mode, find the Delete button in the confirmation dialog
+    // The confirmation shows 'Delete "Americana"?' text
+    const confirmationText = screen.getByText('Delete "Americana"?');
+    expect(confirmationText).toBeInTheDocument();
+
+    // Find the red delete button in the confirmation dialog (it's inside the same card)
+    const confirmationCard = confirmationText.closest('div');
+    const confirmButton = confirmationCard?.querySelector('button.bg-red-600');
+    expect(confirmButton).toBeInTheDocument();
+    await user.click(confirmButton!);
+
+    expect(onDeleteTechnique).toHaveBeenCalledWith('side-control', 'top', 't1');
+  });
+
+  it('calls onUpdateTechniqueNote when technique note is updated', async () => {
+    const user = userEvent.setup();
+    const onUpdateTechniqueNote = vi.fn();
+    render(<PositionView {...defaultProps} onUpdateTechniqueNote={onUpdateTechniqueNote} />);
+
+    // Find the technique note and edit it
+    const noteItem = screen.getByText('Keep elbow by head').closest('li');
+    const editButton = noteItem?.querySelector('button');
+    expect(editButton).toBeInTheDocument();
+    await user.click(editButton!);
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, 'Updated note');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdateTechniqueNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0, 'Updated note');
+  });
+
+  it('calls onDeleteTechniqueNote when technique note is deleted', async () => {
+    const user = userEvent.setup();
+    const onDeleteTechniqueNote = vi.fn();
+    render(<PositionView {...defaultProps} onDeleteTechniqueNote={onDeleteTechniqueNote} />);
+
+    // Find the technique note and delete it
+    const noteItem = screen.getByText('Keep elbow by head').closest('li');
+    const buttons = noteItem?.querySelectorAll('button');
+    const deleteButton = buttons?.[1]; // Second button is delete
+    expect(deleteButton).toBeInTheDocument();
+    await user.click(deleteButton!);
+
+    expect(onDeleteTechniqueNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0);
+  });
 });
