@@ -225,7 +225,7 @@ describe('TechniqueCard', () => {
     expect(onUpdateNote).toHaveBeenCalledWith('tech-2', 0, 'Updated note');
   });
 
-  it('calls onDeleteNote when note is deleted', async () => {
+  it('calls onDeleteNote when note is deleted and confirmed', async () => {
     const user = userEvent.setup();
     const onDeleteNote = vi.fn();
     render(<TechniqueCard technique={mockTechniqueWithNotes} {...defaultProps} onDeleteNote={onDeleteNote} />);
@@ -237,6 +237,12 @@ describe('TechniqueCard', () => {
     const deleteButton = buttons?.[1];
     expect(deleteButton).toBeInTheDocument();
     await user.click(deleteButton!);
+
+    // Confirmation dialog is now shown - click Delete button in confirmation (red bg-red-600 button)
+    expect(screen.getByText('Delete this item?')).toBeInTheDocument();
+    const confirmDialog = screen.getByText('Delete this item?').closest('li');
+    const confirmDeleteBtn = confirmDialog?.querySelector('button.bg-red-600');
+    await user.click(confirmDeleteBtn!);
 
     expect(onDeleteNote).toHaveBeenCalledWith('tech-2', 0);
   });

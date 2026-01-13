@@ -18,6 +18,7 @@ export function EditableItem({
   borderStyle = false,
 }: EditableItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [editValue, setEditValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -44,6 +45,11 @@ export function EditableItem({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') handleSave();
     if (e.key === 'Escape') handleCancel();
+  };
+
+  const handleDelete = () => {
+    onDelete();
+    setIsConfirmingDelete(false);
   };
 
   if (isEditing) {
@@ -73,6 +79,26 @@ export function EditableItem({
     );
   }
 
+  if (isConfirmingDelete) {
+    return (
+      <li className="flex items-center gap-2 text-slate-700 border border-red-200 rounded px-2 py-1 bg-red-50">
+        <span className="flex-1 text-sm">Delete this item?</span>
+        <button
+          onClick={handleDelete}
+          className="px-2 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
+        <button
+          onClick={() => setIsConfirmingDelete(false)}
+          className="px-2 py-1 text-sm text-slate-500 hover:text-slate-700"
+        >
+          Cancel
+        </button>
+      </li>
+    );
+  }
+
   if (borderStyle) {
     return (
       <li className="text-slate-700 pl-3 border-l-2 border-slate-300 group flex items-start justify-between">
@@ -86,7 +112,7 @@ export function EditableItem({
             Edit
           </button>
           <button
-            onClick={onDelete}
+            onClick={() => setIsConfirmingDelete(true)}
             className="text-slate-400 hover:text-red-600 text-xs"
             title="Delete"
           >
@@ -110,7 +136,7 @@ export function EditableItem({
           Edit
         </button>
         <button
-          onClick={onDelete}
+          onClick={() => setIsConfirmingDelete(true)}
           className="text-slate-400 hover:text-red-600 text-xs"
           title="Delete"
         >
