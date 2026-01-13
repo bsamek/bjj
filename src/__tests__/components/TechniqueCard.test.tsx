@@ -203,4 +203,70 @@ describe('TechniqueCard', () => {
     expect(onDeleteTechnique).not.toHaveBeenCalled();
     expect(screen.getByText('Armbar')).toBeInTheDocument();
   });
+
+  // Note update/delete tests
+  it('calls onUpdateNote when note is edited', async () => {
+    const user = userEvent.setup();
+    const onUpdateNote = vi.fn();
+    render(<TechniqueCard technique={mockTechniqueWithNotes} {...defaultProps} onUpdateNote={onUpdateNote} />);
+
+    // Notes use EditableItem, so the Edit button is inside the note item
+    // First note is "Grab shin to control posture"
+    const noteItem = screen.getByText('Grab shin to control posture').closest('li');
+    const editButton = noteItem?.querySelector('button');
+    expect(editButton).toBeInTheDocument();
+    await user.click(editButton!);
+
+    const input = screen.getByRole('textbox');
+    await user.clear(input);
+    await user.type(input, 'Updated note');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdateNote).toHaveBeenCalledWith('tech-2', 0, 'Updated note');
+  });
+
+  it('calls onDeleteNote when note is deleted', async () => {
+    const user = userEvent.setup();
+    const onDeleteNote = vi.fn();
+    render(<TechniqueCard technique={mockTechniqueWithNotes} {...defaultProps} onDeleteNote={onDeleteNote} />);
+
+    // Notes use EditableItem, so find the note and its delete button
+    const noteItem = screen.getByText('Grab shin to control posture').closest('li');
+    const buttons = noteItem?.querySelectorAll('button');
+    // Delete is the second button in EditableItem
+    const deleteButton = buttons?.[1];
+    expect(deleteButton).toBeInTheDocument();
+    await user.click(deleteButton!);
+
+    expect(onDeleteNote).toHaveBeenCalledWith('tech-2', 0);
+  });
+
+  it('rejects empty technique name on edit', async () => {
+    const user = userEvent.setup();
+    const onUpdateTechnique = vi.fn();
+    render(<TechniqueCard technique={mockTechnique} {...defaultProps} onUpdateTechnique={onUpdateTechnique} />);
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.clear(screen.getByDisplayValue('Armbar'));
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdateTechnique).not.toHaveBeenCalled();
+  });
+
+  it('allows editing description', async () => {
+    const user = userEvent.setup();
+    const onUpdateTechnique = vi.fn();
+    render(<TechniqueCard technique={mockTechnique} {...defaultProps} onUpdateTechnique={onUpdateTechnique} />);
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    const descInput = screen.getByDisplayValue('Control wrist, pivot hips, leg over head');
+    await user.clear(descInput);
+    await user.type(descInput, 'Updated description');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onUpdateTechnique).toHaveBeenCalledWith('tech-1', {
+      name: 'Armbar',
+      description: 'Updated description',
+    });
+  });
 });

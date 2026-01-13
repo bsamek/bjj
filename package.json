@@ -3,6 +3,12 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "vitest related --run"
+    ]
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -14,7 +20,8 @@
     "db": "tsx scripts/db.ts",
     "db:dump": "tsx scripts/db.ts dump",
     "db:list": "tsx scripts/db.ts list-users",
-    "db:restore": "tsx scripts/db.ts restore"
+    "db:restore": "tsx scripts/db.ts restore",
+    "prepare": "husky"
   },
   "dependencies": {
     "firebase": "^12.7.0",
@@ -22,8 +29,6 @@
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
-    "firebase-admin": "^13.0.2",
-    "tsx": "^4.19.2",
     "@eslint/js": "^9.39.1",
     "@tailwindcss/vite": "^4.1.18",
     "@testing-library/jest-dom": "^6.9.1",
@@ -33,12 +38,17 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.0.17",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
+    "firebase-admin": "^13.0.2",
     "globals": "^16.5.0",
+    "husky": "^9.1.7",
     "jsdom": "^27.4.0",
+    "lint-staged": "^16.2.7",
     "tailwindcss": "^4.1.18",
+    "tsx": "^4.19.2",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.2.4",

@@ -11,289 +11,275 @@ describe('useFirestore', () => {
     window.localStorage.clear();
   });
 
-  describe('initial loading state', () => {
-    it('returns loading true initially', () => {
-      vi.mocked(onSnapshot).mockImplementation(() => () => {});
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      expect(result.current.loading).toBe(true);
-      expect(result.current.error).toBe(null);
+  it('returns loading true initially', () => {
+    // Don't call the snapshot callback to keep loading state
+    vi.mocked(onSnapshot).mockImplementation(() => {
+      return () => {};
     });
+
+    const { result } = renderHook(() => useFirestore('test-user'));
+
+    expect(result.current.loading).toBe(true);
+    expect(result.current.error).toBe(null);
   });
 
-  describe('data fetching', () => {
-    it('loads data from Firestore when document exists', async () => {
-      const testData: AppData = {
-        principles: [{ id: 'p1', content: 'Test principle', category: 'universal' }],
-        positions: [],
-      };
+  it('sets data from Firestore snapshot when document exists', async () => {
+    const testData: AppData = {
+      principles: [{ id: 'test-principle', content: 'Test principle', category: 'universal' }],
+      positions: [],
+    };
 
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => testData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => true,
+          data: () => testData,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
 
-      const { result } = renderHook(() => useFirestore('test-user'));
+    const { result } = renderHook(() => useFirestore('test-user'));
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(result.current.data).toEqual(testData);
-      expect(result.current.error).toBe(null);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
     });
 
-    it('uses initialData when Firestore document does not exist and no localStorage', async () => {
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => false,
-            data: () => null,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(result.current.data).toEqual(initialData);
-    });
-
-    it('migrates data from localStorage when Firestore document does not exist', async () => {
-      const localData: AppData = {
-        principles: [{ id: 'local', content: 'From localStorage', category: 'top' }],
-        positions: initialData.positions,
-      };
-      window.localStorage.setItem('bjj-study-data', JSON.stringify(localData));
-
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => false,
-            data: () => null,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(result.current.data).toEqual(localData);
-      expect(setDoc).toHaveBeenCalled();
-    });
+    expect(result.current.data).toEqual(testData);
+    expect(result.current.error).toBe(null);
   });
 
-  describe('error handling', () => {
-    it('sets error when Firestore fails', async () => {
-      const testError = new Error('Firestore error');
+  it('uses initialData for new users when document does not exist', async () => {
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => false,
+          data: () => null,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
 
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onError = args[2] as ((err: Error) => void) | undefined;
-        if (typeof onError === 'function') {
-          onError(testError);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
+    vi.mocked(setDoc).mockResolvedValue();
 
-      const { result } = renderHook(() => useFirestore('test-user'));
+    const { result } = renderHook(() => useFirestore('new-user'));
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      expect(result.current.error).toBe(testError);
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
     });
+
+    expect(result.current.data).toEqual(initialData);
+    // Should save initial data to Firestore
+    expect(setDoc).toHaveBeenCalled();
   });
 
-  describe('setData function', () => {
-    it('updates local state immediately', async () => {
-      const testData: AppData = {
-        principles: [{ id: 'p1', content: 'Original', category: 'universal' }],
-        positions: [],
-      };
+  it('migrates localStorage data for new users', async () => {
+    const localStorageData: AppData = {
+      principles: [{ id: 'local-principle', content: 'From localStorage', category: 'bottom' }],
+      positions: [],
+    };
 
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => testData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
+    window.localStorage.setItem('bjj-study-data', JSON.stringify(localStorageData));
 
-      const { result } = renderHook(() => useFirestore('test-user'));
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => false,
+          data: () => null,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+    vi.mocked(setDoc).mockResolvedValue();
 
-      act(() => {
-        result.current.setData({
-          ...testData,
-          principles: [{ id: 'p2', content: 'Updated', category: 'bottom' }],
-        });
-      });
+    const { result } = renderHook(() => useFirestore('migrating-user'));
 
-      expect(result.current.data.principles[0].content).toBe('Updated');
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
     });
 
-    it('accepts a function updater', async () => {
-      const testData: AppData = {
-        principles: [{ id: 'p1', content: 'Original', category: 'universal' }],
-        positions: [],
-      };
-
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => testData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      act(() => {
-        result.current.setData((prev) => ({
-          ...prev,
-          principles: [...prev.principles, { id: 'p2', content: 'Added', category: 'top' }],
-        }));
-      });
-
-      expect(result.current.data.principles).toHaveLength(2);
-      expect(result.current.data.principles[1].content).toBe('Added');
-    });
-
-    it('writes to Firestore when setData called', async () => {
-      const testData: AppData = {
-        principles: [],
-        positions: [],
-      };
-
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => testData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      vi.mocked(setDoc).mockClear();
-
-      act(() => {
-        result.current.setData({
-          principles: [{ id: 'new', content: 'New principle', category: 'universal' }],
-          positions: [],
-        });
-      });
-
-      expect(setDoc).toHaveBeenCalled();
-    });
-
-    it('handles Firestore write errors', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const testData: AppData = { principles: [], positions: [] };
-
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => testData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return () => {};
-      }) as typeof onSnapshot);
-
-      vi.mocked(setDoc).mockRejectedValueOnce(new Error('Write failed'));
-
-      const { result } = renderHook(() => useFirestore('test-user'));
-
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
-
-      act(() => {
-        result.current.setData({ principles: [], positions: [] });
-      });
-
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith('Error writing to Firestore:', expect.any(Error));
-      });
-
-      consoleError.mockRestore();
-    });
+    expect(result.current.data).toEqual(localStorageData);
+    // Should save localStorage data to Firestore
+    expect(setDoc).toHaveBeenCalled();
+    const lastCall = vi.mocked(setDoc).mock.calls[0];
+    expect(lastCall[1]).toEqual(localStorageData);
   });
 
-  describe('cleanup', () => {
-    it('unsubscribes from Firestore on unmount', () => {
-      const unsubscribe = vi.fn();
-      vi.mocked(onSnapshot).mockImplementation(() => unsubscribe);
+  it('handles Firestore snapshot errors', async () => {
+    const testError = new Error('Firestore error');
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const { unmount } = renderHook(() => useFirestore('test-user'));
-      unmount();
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onError = args[2] as ((error: Error) => void) | undefined;
+      if (typeof onError === 'function') {
+        onError(testError);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
 
-      expect(unsubscribe).toHaveBeenCalled();
+    const { result } = renderHook(() => useFirestore('test-user'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
     });
 
-    it('resubscribes when userId changes', async () => {
-      const unsubscribe = vi.fn();
-      vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
-        const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
-        if (typeof onNext === 'function') {
-          onNext({
-            exists: () => true,
-            data: () => initialData,
-          } as unknown as DocumentSnapshot<AppData>);
-        }
-        return unsubscribe;
-      }) as typeof onSnapshot);
+    expect(result.current.error).toBe(testError);
+    expect(consoleSpy).toHaveBeenCalledWith('Firestore error:', testError);
 
-      const { rerender } = renderHook(({ userId }) => useFirestore(userId), {
-        initialProps: { userId: 'user-1' },
-      });
+    consoleSpy.mockRestore();
+  });
 
-      expect(onSnapshot).toHaveBeenCalledTimes(1);
+  it('setData updates local state and writes to Firestore', async () => {
+    const initialTestData: AppData = {
+      principles: [{ id: 'test', content: 'Initial', category: 'universal' }],
+      positions: [],
+    };
 
-      rerender({ userId: 'user-2' });
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => true,
+          data: () => initialTestData,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
 
-      expect(unsubscribe).toHaveBeenCalled();
-      expect(onSnapshot).toHaveBeenCalledTimes(2);
+    vi.mocked(setDoc).mockResolvedValue();
+
+    const { result } = renderHook(() => useFirestore('test-user'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
     });
+
+    const newData: AppData = {
+      principles: [{ id: 'test', content: 'Updated', category: 'universal' }],
+      positions: [],
+    };
+
+    act(() => {
+      result.current.setData(newData);
+    });
+
+    expect(result.current.data).toEqual(newData);
+    expect(setDoc).toHaveBeenCalled();
+    const lastCall = vi.mocked(setDoc).mock.calls[vi.mocked(setDoc).mock.calls.length - 1];
+    expect(lastCall[1]).toEqual(newData);
+  });
+
+  it('setData accepts function updater', async () => {
+    const initialTestData: AppData = {
+      principles: [{ id: 'test', content: 'Initial', category: 'universal' }],
+      positions: [],
+    };
+
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => true,
+          data: () => initialTestData,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
+
+    vi.mocked(setDoc).mockResolvedValue();
+
+    const { result } = renderHook(() => useFirestore('test-user'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setData((prev) => ({
+        ...prev,
+        principles: [...prev.principles, { id: 'new', content: 'New principle', category: 'top' }],
+      }));
+    });
+
+    expect(result.current.data.principles).toHaveLength(2);
+    expect(result.current.data.principles[1].content).toBe('New principle');
+  });
+
+  it('handles setDoc write errors', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const writeError = new Error('Write failed');
+
+    const initialTestData: AppData = {
+      principles: [],
+      positions: [],
+    };
+
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => true,
+          data: () => initialTestData,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
+
+    vi.mocked(setDoc).mockRejectedValue(writeError);
+
+    const { result } = renderHook(() => useFirestore('test-user'));
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    act(() => {
+      result.current.setData({ principles: [], positions: [] });
+    });
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Error writing to Firestore:', writeError);
+    });
+
+    expect(result.current.error).toBe(writeError);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('cleans up Firestore subscription on unmount', () => {
+    const unsubscribe = vi.fn();
+    vi.mocked(onSnapshot).mockImplementation(() => {
+      return unsubscribe;
+    });
+
+    const { unmount } = renderHook(() => useFirestore('test-user'));
+
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalled();
+  });
+
+  it('resubscribes when userId changes', () => {
+    const unsubscribe1 = vi.fn();
+    const unsubscribe2 = vi.fn();
+    let callCount = 0;
+
+    vi.mocked(onSnapshot).mockImplementation(() => {
+      callCount++;
+      return callCount === 1 ? unsubscribe1 : unsubscribe2;
+    });
+
+    const { rerender } = renderHook(({ userId }) => useFirestore(userId), {
+      initialProps: { userId: 'user-1' },
+    });
+
+    rerender({ userId: 'user-2' });
+
+    expect(unsubscribe1).toHaveBeenCalled();
+    expect(onSnapshot).toHaveBeenCalledTimes(2);
   });
 });

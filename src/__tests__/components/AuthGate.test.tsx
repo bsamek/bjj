@@ -5,171 +5,251 @@ import { onAuthStateChanged, signInWithPopup, signOut, type User } from 'firebas
 import { AuthGate } from '../../components/AuthGate';
 
 describe('AuthGate', () => {
-  const mockChildren = vi.fn((userId: string, onSignOut: () => void) => (
-    <div>
-      <span data-testid="user-id">{userId}</span>
-      <button onClick={onSignOut}>Sign Out</button>
-    </div>
-  ));
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockChildren.mockClear();
   });
 
-  describe('loading state', () => {
-    it('shows loading state initially', () => {
-      vi.mocked(onAuthStateChanged).mockImplementation(() => () => {});
-
-      render(<AuthGate>{mockChildren}</AuthGate>);
-
-      expect(screen.getByText('Loading...')).toBeInTheDocument();
+  it('renders loading state initially', () => {
+    // Don't call the auth callback - leave in loading state
+    vi.mocked(onAuthStateChanged).mockImplementation(() => {
+      return () => {};
     });
+
+    render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument();
   });
 
-  describe('unauthenticated state', () => {
-    beforeEach(() => {
-      vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
-        if (typeof callback === 'function') {
-          callback(null);
-        }
-        return () => {};
-      });
+  it('renders sign-in button when not authenticated', async () => {
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback(null);
+      }
+      return () => {};
     });
 
-    it('shows sign in screen when not authenticated', () => {
-      render(<AuthGate>{mockChildren}</AuthGate>);
+    render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
 
-      expect(screen.getByText('BJJ Study')).toBeInTheDocument();
-      expect(screen.getByText('Sign in to access your training notes')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
 
-    it('calls signInWithPopup when sign in button clicked', async () => {
-      const user = userEvent.setup();
-      render(<AuthGate>{mockChildren}</AuthGate>);
-
-      await user.click(screen.getByRole('button', { name: /sign in with google/i }));
-
-      expect(signInWithPopup).toHaveBeenCalled();
-    });
-
-    it('handles sign in errors gracefully', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.mocked(signInWithPopup).mockRejectedValueOnce(new Error('Sign in failed'));
-
-      const user = userEvent.setup();
-      render(<AuthGate>{mockChildren}</AuthGate>);
-
-      await user.click(screen.getByRole('button', { name: /sign in with google/i }));
-
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith('Sign in error:', expect.any(Error));
-      });
-
-      consoleError.mockRestore();
-    });
+    expect(screen.getByText('BJJ Study')).toBeInTheDocument();
+    expect(screen.getByText('Sign in to access your training notes')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
   });
 
-  describe('authenticated state', () => {
-    const mockUser = { uid: 'test-user-123', email: 'test@example.com' } as User;
-
-    beforeEach(() => {
-      vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
-        if (typeof callback === 'function') {
-          callback(mockUser);
-        }
-        return () => {};
-      });
+  it('calls children render prop with userId when authenticated', async () => {
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback({ uid: 'test-user-123', email: 'test@example.com' } as User);
+      }
+      return () => {};
     });
 
-    it('renders children with userId when authenticated', () => {
-      render(<AuthGate>{mockChildren}</AuthGate>);
+    render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
 
-      expect(screen.getByTestId('user-id')).toHaveTextContent('test-user-123');
-      expect(mockChildren).toHaveBeenCalledWith('test-user-123', expect.any(Function));
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
 
-    it('calls signOut when onSignOut is called', async () => {
-      const user = userEvent.setup();
-      render(<AuthGate>{mockChildren}</AuthGate>);
-
-      await user.click(screen.getByRole('button', { name: 'Sign Out' }));
-
-      expect(signOut).toHaveBeenCalled();
-    });
-
-    it('handles sign out errors gracefully', async () => {
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.mocked(signOut).mockRejectedValueOnce(new Error('Sign out failed'));
-
-      const user = userEvent.setup();
-      render(<AuthGate>{mockChildren}</AuthGate>);
-
-      await user.click(screen.getByRole('button', { name: 'Sign Out' }));
-
-      await waitFor(() => {
-        expect(consoleError).toHaveBeenCalledWith('Sign out error:', expect.any(Error));
-      });
-
-      consoleError.mockRestore();
-    });
+    expect(screen.getByText('User: test-user-123')).toBeInTheDocument();
   });
 
-  describe('email allowlist', () => {
-    it('shows unauthorized message when user email not allowed', async () => {
-      const wrongUser = { uid: 'wrong-user', email: 'wrong@example.com' } as User;
+  it('handles sign-in button click', async () => {
+    const user = userEvent.setup();
 
-      // Simulate the auth flow: user signs in, gets rejected, signed out
-      vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
-        if (typeof callback === 'function') {
-          // First call: user is authenticated but wrong email
-          // The component will call signOut, which we mock to trigger null user
-          callback(wrongUser);
-        }
-        return () => {};
-      });
-
-      // Mock signOut to succeed
-      vi.mocked(signOut).mockResolvedValueOnce();
-
-      // Import and set the allowed email env var
-      vi.stubEnv('VITE_ALLOWED_EMAIL', 'allowed@example.com');
-
-      // Re-import AuthGate to pick up new env var
-      vi.resetModules();
-      const { AuthGate: AuthGateWithAllowlist } = await import('../../components/AuthGate');
-
-      // Now simulate auth state changing after signOut
-      vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
-        if (typeof callback === 'function') {
-          // After signOut, user becomes null and unauthorized flag is set
-          setTimeout(() => callback(null), 0);
-        }
-        return () => {};
-      });
-
-      render(<AuthGateWithAllowlist>{mockChildren}</AuthGateWithAllowlist>);
-
-      // Should show sign-in page (after being signed out)
-      await waitFor(() => {
-        expect(screen.getByRole('button', { name: /sign in with google/i })).toBeInTheDocument();
-      });
-
-      // Reset env
-      vi.stubEnv('VITE_ALLOWED_EMAIL', '');
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback(null);
+      }
+      return () => {};
     });
+
+    vi.mocked(signInWithPopup).mockResolvedValue({} as never);
+
+    render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /sign in with google/i }));
+
+    expect(signInWithPopup).toHaveBeenCalled();
   });
 
-  describe('cleanup', () => {
-    it('unsubscribes from auth state changes on unmount', () => {
-      const unsubscribe = vi.fn();
-      vi.mocked(onAuthStateChanged).mockImplementation(() => unsubscribe);
+  it('handles sign-in error gracefully', async () => {
+    const user = userEvent.setup();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const { unmount } = render(<AuthGate>{mockChildren}</AuthGate>);
-      unmount();
-
-      expect(unsubscribe).toHaveBeenCalled();
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback(null);
+      }
+      return () => {};
     });
+
+    vi.mocked(signInWithPopup).mockRejectedValue(new Error('Sign in failed'));
+
+    render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /sign in with google/i }));
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Sign in error:', expect.any(Error));
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('provides sign-out callback and handles sign-out', async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback({ uid: 'test-user-123', email: 'test@example.com' } as User);
+      }
+      return () => {};
+    });
+
+    vi.mocked(signOut).mockResolvedValue();
+
+    render(
+      <AuthGate>
+        {(_userId, onSignOut) => (
+          <button onClick={onSignOut}>Sign Out</button>
+        )}
+      </AuthGate>
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Sign Out' }));
+
+    expect(signOut).toHaveBeenCalled();
+  });
+
+  it('handles sign-out error gracefully', async () => {
+    const user = userEvent.setup();
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback({ uid: 'test-user-123', email: 'test@example.com' } as User);
+      }
+      return () => {};
+    });
+
+    vi.mocked(signOut).mockRejectedValue(new Error('Sign out failed'));
+
+    render(
+      <AuthGate>
+        {(_userId, onSignOut) => (
+          <button onClick={onSignOut}>Sign Out</button>
+        )}
+      </AuthGate>
+    );
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Sign Out' }));
+
+    await waitFor(() => {
+      expect(consoleSpy).toHaveBeenCalledWith('Sign out error:', expect.any(Error));
+    });
+
+    consoleSpy.mockRestore();
+  });
+
+  it('cleans up auth subscription on unmount', () => {
+    const unsubscribe = vi.fn();
+    vi.mocked(onAuthStateChanged).mockImplementation(() => {
+      return unsubscribe;
+    });
+
+    const { unmount } = render(<AuthGate>{(userId) => <div>User: {userId}</div>}</AuthGate>);
+
+    unmount();
+
+    expect(unsubscribe).toHaveBeenCalled();
+  });
+});
+
+describe('AuthGate with ALLOWED_EMAIL restriction', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('shows access denied when email does not match ALLOWED_EMAIL', async () => {
+    // Stub the env variable to restrict access
+    vi.stubEnv('VITE_ALLOWED_EMAIL', 'allowed@example.com');
+
+    // Re-import the component to pick up the env change
+    vi.resetModules();
+    const { AuthGate: RestrictedAuthGate } = await import('../../components/AuthGate');
+
+    vi.mocked(signOut).mockResolvedValue();
+
+    // User with wrong email tries to sign in
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        // Callback with wrong email - component should sign out and show unauthorized
+        callback({ uid: 'wrong-user', email: 'wrong@example.com' } as User);
+      }
+      return () => {};
+    });
+
+    render(<RestrictedAuthGate>{(userId) => <div>User: {userId}</div>}</RestrictedAuthGate>);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Should have signed out the unauthorized user
+    expect(signOut).toHaveBeenCalled();
+
+    // Should show access denied message
+    expect(screen.getByText('Access denied. This app is private.')).toBeInTheDocument();
+
+    // Restore env
+    vi.stubEnv('VITE_ALLOWED_EMAIL', '');
+  });
+
+  it('allows access when email matches ALLOWED_EMAIL', async () => {
+    // Stub the env variable to restrict access
+    vi.stubEnv('VITE_ALLOWED_EMAIL', 'allowed@example.com');
+
+    // Re-import the component to pick up the env change
+    vi.resetModules();
+    const { AuthGate: RestrictedAuthGate } = await import('../../components/AuthGate');
+
+    // User with correct email
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback({ uid: 'allowed-user', email: 'allowed@example.com' } as User);
+      }
+      return () => {};
+    });
+
+    render(<RestrictedAuthGate>{(userId) => <div>User: {userId}</div>}</RestrictedAuthGate>);
+
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
+    });
+
+    // Should render the children
+    expect(screen.getByText('User: allowed-user')).toBeInTheDocument();
+
+    // Restore env
+    vi.stubEnv('VITE_ALLOWED_EMAIL', '');
   });
 });
