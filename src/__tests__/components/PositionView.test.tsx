@@ -275,19 +275,19 @@ describe('PositionView', () => {
   // Keyboard shortcuts
   it('adds do first item on Enter key', async () => {
     const user = userEvent.setup();
-    const onAddDoFirst = vi.fn();
-    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]);
     await user.type(screen.getByPlaceholderText('Add a do first item...'), 'Enter item{Enter}');
 
-    expect(onAddDoFirst).toHaveBeenCalledWith('side-control', 'top', 'Enter item');
+    expect(props.doFirstHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'Enter item');
   });
 
   it('closes do first form on Escape key', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]);
@@ -298,19 +298,19 @@ describe('PositionView', () => {
 
   it('adds transition on Enter key', async () => {
     const user = userEvent.setup();
-    const onAddTransition = vi.fn();
-    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]);
     await user.type(screen.getByPlaceholderText('Add a transition...'), 'Enter transition{Enter}');
 
-    expect(onAddTransition).toHaveBeenCalledWith('side-control', 'top', 'Enter transition');
+    expect(props.transitionHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'Enter transition');
   });
 
   it('closes transition form on Escape key', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]);
@@ -321,19 +321,19 @@ describe('PositionView', () => {
 
   it('adds note on Enter key', async () => {
     const user = userEvent.setup();
-    const onAddPerspectiveNote = vi.fn();
-    render(<PositionView {...defaultProps} onAddPerspectiveNote={onAddPerspectiveNote} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     await user.click(addNoteButtons[addNoteButtons.length - 1]);
     await user.type(screen.getByPlaceholderText('Add a note...'), 'Enter note{Enter}');
 
-    expect(onAddPerspectiveNote).toHaveBeenCalledWith('side-control', 'top', 'Enter note');
+    expect(props.noteHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'Enter note');
   });
 
   it('closes note form on Escape key', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     await user.click(addNoteButtons[addNoteButtons.length - 1]);
@@ -345,7 +345,7 @@ describe('PositionView', () => {
   // Cancel button tests
   it('closes do first form on Cancel', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]);
@@ -356,20 +356,18 @@ describe('PositionView', () => {
 
   it('closes transition form on Cancel', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]);
-    // There will be two Cancel buttons now (DoFirst and Transitions section)
-    const cancelButtons = screen.getAllByRole('button', { name: 'Cancel' });
-    await user.click(cancelButtons[cancelButtons.length - 1]);
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByPlaceholderText('Add a transition...')).not.toBeInTheDocument();
   });
 
   it('closes note form on Cancel', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     await user.click(addNoteButtons[addNoteButtons.length - 1]);
@@ -381,40 +379,38 @@ describe('PositionView', () => {
   // Empty value rejection
   it('rejects empty do first item', async () => {
     const user = userEvent.setup();
-    const onAddDoFirst = vi.fn();
-    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]);
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddDoFirst).not.toHaveBeenCalled();
+    expect(props.doFirstHandlers.add).not.toHaveBeenCalled();
   });
 
   it('rejects empty transition', async () => {
     const user = userEvent.setup();
-    const onAddTransition = vi.fn();
-    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]);
-    // Click Add on the transition form
-    const addFormButtons = screen.getAllByRole('button', { name: 'Add' });
-    await user.click(addFormButtons[addFormButtons.length - 1]);
+    await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddTransition).not.toHaveBeenCalled();
+    expect(props.transitionHandlers.add).not.toHaveBeenCalled();
   });
 
   it('rejects empty perspective note', async () => {
     const user = userEvent.setup();
-    const onAddPerspectiveNote = vi.fn();
-    render(<PositionView {...defaultProps} onAddPerspectiveNote={onAddPerspectiveNote} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     await user.click(addNoteButtons[addNoteButtons.length - 1]);
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddPerspectiveNote).not.toHaveBeenCalled();
+    expect(props.noteHandlers.add).not.toHaveBeenCalled();
   });
 
   // Empty state messages
@@ -423,17 +419,19 @@ describe('PositionView', () => {
       ...mockPosition,
       top: { ...mockPosition.top, doFirst: [] },
     };
-    render(<PositionView {...defaultProps} position={emptyPosition} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} position={emptyPosition} />);
 
     expect(screen.getByText('No items yet')).toBeInTheDocument();
   });
 
-  it('shows "No transitions yet" when transitions is empty', async () => {
+  it('shows "No transitions yet" when transitions is empty', () => {
     const emptyPosition = {
       ...mockPosition,
       top: { ...mockPosition.top, transitions: [] },
     };
-    render(<PositionView {...defaultProps} position={emptyPosition} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} position={emptyPosition} />);
 
     expect(screen.getByText('No transitions yet')).toBeInTheDocument();
   });
@@ -441,7 +439,7 @@ describe('PositionView', () => {
   // Tab click when already active
   it('allows clicking Top tab when already on Top', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     // Default is Top, click Top again
     await user.click(screen.getByRole('button', { name: 'Top' }));
@@ -451,10 +449,10 @@ describe('PositionView', () => {
   });
 
   // Technique CRUD callback tests
-  it('calls onUpdateTechnique when technique is updated', async () => {
+  it('calls techniqueHandlers.update when technique is updated', async () => {
     const user = userEvent.setup();
-    const onUpdateTechnique = vi.fn();
-    render(<PositionView {...defaultProps} onUpdateTechnique={onUpdateTechnique} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     // Find the technique edit button via title (first one is Americana)
     const editButtons = screen.getAllByTitle('Edit technique');
@@ -465,16 +463,16 @@ describe('PositionView', () => {
     await user.type(nameInput, 'Updated Americana');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(onUpdateTechnique).toHaveBeenCalledWith('side-control', 'top', 't1', {
+    expect(props.techniqueHandlers.update).toHaveBeenCalledWith('side-control', 'top', 't1', {
       name: 'Updated Americana',
       description: 'Figure-four grip',
     });
   });
 
-  it('calls onDeleteTechnique when technique is deleted', async () => {
+  it('calls techniqueHandlers.delete when technique is deleted', async () => {
     const user = userEvent.setup();
-    const onDeleteTechnique = vi.fn();
-    render(<PositionView {...defaultProps} onDeleteTechnique={onDeleteTechnique} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     // Find technique delete button via title (first one is Americana)
     const deleteButtons = screen.getAllByTitle('Delete technique');
@@ -491,13 +489,13 @@ describe('PositionView', () => {
     expect(confirmButton).toBeInTheDocument();
     await user.click(confirmButton!);
 
-    expect(onDeleteTechnique).toHaveBeenCalledWith('side-control', 'top', 't1');
+    expect(props.techniqueHandlers.delete).toHaveBeenCalledWith('side-control', 'top', 't1');
   });
 
-  it('calls onUpdateTechniqueNote when technique note is updated', async () => {
+  it('calls techniqueHandlers.updateNote when technique note is updated', async () => {
     const user = userEvent.setup();
-    const onUpdateTechniqueNote = vi.fn();
-    render(<PositionView {...defaultProps} onUpdateTechniqueNote={onUpdateTechniqueNote} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     // Find the technique note and edit it
     const noteItem = screen.getByText('Keep elbow by head').closest('li');
@@ -510,13 +508,13 @@ describe('PositionView', () => {
     await user.type(input, 'Updated note');
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(onUpdateTechniqueNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0, 'Updated note');
+    expect(props.techniqueHandlers.updateNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0, 'Updated note');
   });
 
-  it('calls onDeleteTechniqueNote when technique note is deleted', async () => {
+  it('calls techniqueHandlers.deleteNote when technique note is deleted', async () => {
     const user = userEvent.setup();
-    const onDeleteTechniqueNote = vi.fn();
-    render(<PositionView {...defaultProps} onDeleteTechniqueNote={onDeleteTechniqueNote} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     // Find the technique note and delete it
     const noteItem = screen.getByText('Keep elbow by head').closest('li');
@@ -525,6 +523,6 @@ describe('PositionView', () => {
     expect(deleteButton).toBeInTheDocument();
     await user.click(deleteButton!);
 
-    expect(onDeleteTechniqueNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0);
+    expect(props.techniqueHandlers.deleteNote).toHaveBeenCalledWith('side-control', 'top', 't1', 0);
   });
 });
