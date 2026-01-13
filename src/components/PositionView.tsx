@@ -1,90 +1,43 @@
 import { useState } from 'react';
-import type { Position, Technique } from '../types';
+import type { Position } from '../types';
+import type { ArrayHandlers, TechniqueHandlers } from '../utils/stateHandlers';
 import { TechniqueCard } from './TechniqueCard';
 import { EditableItem } from './EditableItem';
+import { Button } from './ui/Button';
+import { AddItemForm } from './ui/AddItemForm';
+
+type AddingSection = 'technique' | 'note' | 'doFirst' | 'transition' | null;
 
 interface PositionViewProps {
   position: Position;
-  onAddTechnique: (positionId: string, perspective: 'top' | 'bottom', technique: Omit<Technique, 'id'>) => void;
-  onAddTechniqueNote: (positionId: string, perspective: 'top' | 'bottom', techniqueId: string, note: string) => void;
-  onAddPerspectiveNote: (positionId: string, perspective: 'top' | 'bottom', note: string) => void;
-  onAddDoFirst: (positionId: string, perspective: 'top' | 'bottom', item: string) => void;
-  onUpdateDoFirst: (positionId: string, perspective: 'top' | 'bottom', index: number, item: string) => void;
-  onDeleteDoFirst: (positionId: string, perspective: 'top' | 'bottom', index: number) => void;
-  onAddTransition: (positionId: string, perspective: 'top' | 'bottom', item: string) => void;
-  onUpdateTransition: (positionId: string, perspective: 'top' | 'bottom', index: number, item: string) => void;
-  onDeleteTransition: (positionId: string, perspective: 'top' | 'bottom', index: number) => void;
-  onUpdateTechnique: (positionId: string, perspective: 'top' | 'bottom', techniqueId: string, updates: Partial<Technique>) => void;
-  onDeleteTechnique: (positionId: string, perspective: 'top' | 'bottom', techniqueId: string) => void;
-  onUpdatePerspectiveNote: (positionId: string, perspective: 'top' | 'bottom', index: number, note: string) => void;
-  onDeletePerspectiveNote: (positionId: string, perspective: 'top' | 'bottom', index: number) => void;
-  onUpdateTechniqueNote: (positionId: string, perspective: 'top' | 'bottom', techniqueId: string, index: number, note: string) => void;
-  onDeleteTechniqueNote: (positionId: string, perspective: 'top' | 'bottom', techniqueId: string, index: number) => void;
+  doFirstHandlers: ArrayHandlers;
+  transitionHandlers: ArrayHandlers;
+  noteHandlers: ArrayHandlers;
+  techniqueHandlers: TechniqueHandlers;
 }
 
 export function PositionView({
   position,
-  onAddTechnique,
-  onAddTechniqueNote,
-  onAddPerspectiveNote,
-  onAddDoFirst,
-  onUpdateDoFirst,
-  onDeleteDoFirst,
-  onAddTransition,
-  onUpdateTransition,
-  onDeleteTransition,
-  onUpdateTechnique,
-  onDeleteTechnique,
-  onUpdatePerspectiveNote,
-  onDeletePerspectiveNote,
-  onUpdateTechniqueNote,
-  onDeleteTechniqueNote,
+  doFirstHandlers,
+  transitionHandlers,
+  noteHandlers,
+  techniqueHandlers,
 }: PositionViewProps) {
   const [activeTab, setActiveTab] = useState<'top' | 'bottom'>('top');
-  const [isAddingTechnique, setIsAddingTechnique] = useState(false);
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [isAddingDoFirst, setIsAddingDoFirst] = useState(false);
-  const [isAddingTransition, setIsAddingTransition] = useState(false);
+  const [addingSection, setAddingSection] = useState<AddingSection>(null);
   const [newTechnique, setNewTechnique] = useState({ name: '', description: '' });
-  const [newNote, setNewNote] = useState('');
-  const [newDoFirst, setNewDoFirst] = useState('');
-  const [newTransition, setNewTransition] = useState('');
 
   const perspective = position[activeTab];
 
   const handleAddTechnique = () => {
     if (newTechnique.name.trim()) {
-      onAddTechnique(position.id, activeTab, {
+      techniqueHandlers.add(position.id, activeTab, {
         name: newTechnique.name.trim(),
         description: newTechnique.description.trim(),
         notes: [],
       });
       setNewTechnique({ name: '', description: '' });
-      setIsAddingTechnique(false);
-    }
-  };
-
-  const handleAddNote = () => {
-    if (newNote.trim()) {
-      onAddPerspectiveNote(position.id, activeTab, newNote.trim());
-      setNewNote('');
-      setIsAddingNote(false);
-    }
-  };
-
-  const handleAddDoFirstItem = () => {
-    if (newDoFirst.trim()) {
-      onAddDoFirst(position.id, activeTab, newDoFirst.trim());
-      setNewDoFirst('');
-      setIsAddingDoFirst(false);
-    }
-  };
-
-  const handleAddTransitionItem = () => {
-    if (newTransition.trim()) {
-      onAddTransition(position.id, activeTab, newTransition.trim());
-      setNewTransition('');
-      setIsAddingTransition(false);
+      setAddingSection(null);
     }
   };
 
@@ -122,43 +75,20 @@ export function PositionView({
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
             Do First
           </h3>
-          <button
-            onClick={() => setIsAddingDoFirst(true)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Button variant="link" onClick={() => setAddingSection('doFirst')}>
             + Add
-          </button>
+          </Button>
         </div>
 
-        {isAddingDoFirst && (
-          <div className="bg-slate-50 p-4 rounded-lg mb-3">
-            <input
-              type="text"
-              value={newDoFirst}
-              onChange={(e) => setNewDoFirst(e.target.value)}
-              placeholder="Add a do first item..."
-              className="w-full px-3 py-2 border border-slate-300 rounded mb-2"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddDoFirstItem();
-                if (e.key === 'Escape') setIsAddingDoFirst(false);
-              }}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddDoFirstItem}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingDoFirst(false)}
-                className="px-3 py-1 text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {addingSection === 'doFirst' && (
+          <AddItemForm
+            placeholder="Add a do first item..."
+            onAdd={(value) => {
+              doFirstHandlers.add(position.id, activeTab, value);
+              setAddingSection(null);
+            }}
+            onCancel={() => setAddingSection(null)}
+          />
         )}
 
         {perspective.doFirst.length > 0 ? (
@@ -169,13 +99,13 @@ export function PositionView({
                 value={item}
                 bulletColor="text-blue-500"
                 bulletChar="•"
-                onUpdate={(newValue) => onUpdateDoFirst(position.id, activeTab, idx, newValue)}
-                onDelete={() => onDeleteDoFirst(position.id, activeTab, idx)}
+                onUpdate={(newValue) => doFirstHandlers.update(position.id, activeTab, idx, newValue)}
+                onDelete={() => doFirstHandlers.delete(position.id, activeTab, idx)}
               />
             ))}
           </ul>
         ) : (
-          !isAddingDoFirst && (
+          addingSection !== 'doFirst' && (
             <p className="text-slate-400 text-sm italic">No items yet</p>
           )
         )}
@@ -187,15 +117,12 @@ export function PositionView({
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
             Techniques
           </h3>
-          <button
-            onClick={() => setIsAddingTechnique(true)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Button variant="link" onClick={() => setAddingSection('technique')}>
             + Add Technique
-          </button>
+          </Button>
         </div>
 
-        {isAddingTechnique && (
+        {addingSection === 'technique' && (
           <div className="bg-slate-50 p-4 rounded-lg mb-4 space-y-2">
             <input
               type="text"
@@ -213,18 +140,8 @@ export function PositionView({
               className="w-full px-3 py-2 border border-slate-300 rounded"
             />
             <div className="flex gap-2">
-              <button
-                onClick={handleAddTechnique}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingTechnique(false)}
-                className="px-3 py-1 text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
+              <Button onClick={handleAddTechnique}>Add</Button>
+              <Button variant="secondary" onClick={() => setAddingSection(null)}>Cancel</Button>
             </div>
           </div>
         )}
@@ -235,19 +152,19 @@ export function PositionView({
               key={technique.id}
               technique={technique}
               onAddNote={(techniqueId, note) =>
-                onAddTechniqueNote(position.id, activeTab, techniqueId, note)
+                techniqueHandlers.addNote(position.id, activeTab, techniqueId, note)
               }
               onUpdateTechnique={(techniqueId, updates) =>
-                onUpdateTechnique(position.id, activeTab, techniqueId, updates)
+                techniqueHandlers.update(position.id, activeTab, techniqueId, updates)
               }
               onDeleteTechnique={(techniqueId) =>
-                onDeleteTechnique(position.id, activeTab, techniqueId)
+                techniqueHandlers.delete(position.id, activeTab, techniqueId)
               }
               onUpdateNote={(techniqueId, index, note) =>
-                onUpdateTechniqueNote(position.id, activeTab, techniqueId, index, note)
+                techniqueHandlers.updateNote(position.id, activeTab, techniqueId, index, note)
               }
               onDeleteNote={(techniqueId, index) =>
-                onDeleteTechniqueNote(position.id, activeTab, techniqueId, index)
+                techniqueHandlers.deleteNote(position.id, activeTab, techniqueId, index)
               }
             />
           ))}
@@ -260,43 +177,20 @@ export function PositionView({
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
             Transitions
           </h3>
-          <button
-            onClick={() => setIsAddingTransition(true)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Button variant="link" onClick={() => setAddingSection('transition')}>
             + Add
-          </button>
+          </Button>
         </div>
 
-        {isAddingTransition && (
-          <div className="bg-slate-50 p-4 rounded-lg mb-3">
-            <input
-              type="text"
-              value={newTransition}
-              onChange={(e) => setNewTransition(e.target.value)}
-              placeholder="Add a transition..."
-              className="w-full px-3 py-2 border border-slate-300 rounded mb-2"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddTransitionItem();
-                if (e.key === 'Escape') setIsAddingTransition(false);
-              }}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddTransitionItem}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingTransition(false)}
-                className="px-3 py-1 text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {addingSection === 'transition' && (
+          <AddItemForm
+            placeholder="Add a transition..."
+            onAdd={(value) => {
+              transitionHandlers.add(position.id, activeTab, value);
+              setAddingSection(null);
+            }}
+            onCancel={() => setAddingSection(null)}
+          />
         )}
 
         {perspective.transitions.length > 0 ? (
@@ -307,13 +201,13 @@ export function PositionView({
                 value={item}
                 bulletColor="text-green-500"
                 bulletChar="→"
-                onUpdate={(newValue) => onUpdateTransition(position.id, activeTab, idx, newValue)}
-                onDelete={() => onDeleteTransition(position.id, activeTab, idx)}
+                onUpdate={(newValue) => transitionHandlers.update(position.id, activeTab, idx, newValue)}
+                onDelete={() => transitionHandlers.delete(position.id, activeTab, idx)}
               />
             ))}
           </ul>
         ) : (
-          !isAddingTransition && (
+          addingSection !== 'transition' && (
             <p className="text-slate-400 text-sm italic">No transitions yet</p>
           )
         )}
@@ -325,43 +219,20 @@ export function PositionView({
           <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide">
             Notes
           </h3>
-          <button
-            onClick={() => setIsAddingNote(true)}
-            className="text-sm text-blue-600 hover:text-blue-800"
-          >
+          <Button variant="link" onClick={() => setAddingSection('note')}>
             + Add Note
-          </button>
+          </Button>
         </div>
 
-        {isAddingNote && (
-          <div className="bg-slate-50 p-4 rounded-lg mb-4">
-            <input
-              type="text"
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-              placeholder="Add a note..."
-              className="w-full px-3 py-2 border border-slate-300 rounded mb-2"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleAddNote();
-                if (e.key === 'Escape') setIsAddingNote(false);
-              }}
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddNote}
-                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Add
-              </button>
-              <button
-                onClick={() => setIsAddingNote(false)}
-                className="px-3 py-1 text-slate-500 hover:text-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {addingSection === 'note' && (
+          <AddItemForm
+            placeholder="Add a note..."
+            onAdd={(value) => {
+              noteHandlers.add(position.id, activeTab, value);
+              setAddingSection(null);
+            }}
+            onCancel={() => setAddingSection(null)}
+          />
         )}
 
         {perspective.notes.length > 0 ? (
@@ -371,13 +242,13 @@ export function PositionView({
                 key={idx}
                 value={note}
                 borderStyle
-                onUpdate={(newValue) => onUpdatePerspectiveNote(position.id, activeTab, idx, newValue)}
-                onDelete={() => onDeletePerspectiveNote(position.id, activeTab, idx)}
+                onUpdate={(newValue) => noteHandlers.update(position.id, activeTab, idx, newValue)}
+                onDelete={() => noteHandlers.delete(position.id, activeTab, idx)}
               />
             ))}
           </ul>
         ) : (
-          !isAddingNote && (
+          addingSection !== 'note' && (
             <p className="text-slate-400 text-sm italic">No notes yet</p>
           )
         )}

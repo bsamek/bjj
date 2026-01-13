@@ -26,46 +26,58 @@ const mockPosition: Position = {
   },
 };
 
+const createMockHandlers = () => ({
+  doFirstHandlers: {
+    add: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  transitionHandlers: {
+    add: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  noteHandlers: {
+    add: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+  },
+  techniqueHandlers: {
+    add: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    addNote: vi.fn(),
+    updateNote: vi.fn(),
+    deleteNote: vi.fn(),
+  },
+});
+
 describe('PositionView', () => {
-  const defaultProps = {
+  const createDefaultProps = () => ({
     position: mockPosition,
-    onAddTechnique: vi.fn(),
-    onAddTechniqueNote: vi.fn(),
-    onAddPerspectiveNote: vi.fn(),
-    onAddDoFirst: vi.fn(),
-    onUpdateDoFirst: vi.fn(),
-    onDeleteDoFirst: vi.fn(),
-    onAddTransition: vi.fn(),
-    onUpdateTransition: vi.fn(),
-    onDeleteTransition: vi.fn(),
-    onUpdateTechnique: vi.fn(),
-    onDeleteTechnique: vi.fn(),
-    onUpdatePerspectiveNote: vi.fn(),
-    onDeletePerspectiveNote: vi.fn(),
-    onUpdateTechniqueNote: vi.fn(),
-    onDeleteTechniqueNote: vi.fn(),
-  };
+    ...createMockHandlers(),
+  });
 
   it('renders position name as heading', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
   });
 
   it('shows Top and Bottom tabs', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByRole('button', { name: 'Top' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Bottom' })).toBeInTheDocument();
   });
 
   it('shows Top tab content by default', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByText('Crossface + far underhook')).toBeInTheDocument();
     expect(screen.getByText('Americana')).toBeInTheDocument();
   });
 
   it('switches to Bottom tab when clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     await user.click(screen.getByRole('button', { name: 'Bottom' }));
 
@@ -75,37 +87,37 @@ describe('PositionView', () => {
   });
 
   it('renders doFirst items', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByText('Crossface + far underhook')).toBeInTheDocument();
     expect(screen.getByText('Kill their frames')).toBeInTheDocument();
   });
 
   it('renders techniques', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByText('Americana')).toBeInTheDocument();
     expect(screen.getByText('Figure-four grip')).toBeInTheDocument();
     expect(screen.getByText('Kimura')).toBeInTheDocument();
   });
 
   it('renders transitions', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByText('Mount')).toBeInTheDocument();
     expect(screen.getByText('Back via gift-wrap')).toBeInTheDocument();
   });
 
   it('renders perspective notes', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByText('Mousetrap system: use scarf hold first')).toBeInTheDocument();
   });
 
   it('shows "+ Add Technique" button', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     expect(screen.getByRole('button', { name: '+ Add Technique' })).toBeInTheDocument();
   });
 
   it('opens technique form when "+ Add Technique" clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
 
@@ -113,17 +125,17 @@ describe('PositionView', () => {
     expect(screen.getByPlaceholderText('Description')).toBeInTheDocument();
   });
 
-  it('calls onAddTechnique on submit', async () => {
+  it('calls techniqueHandlers.add on submit', async () => {
     const user = userEvent.setup();
-    const onAddTechnique = vi.fn();
-    render(<PositionView {...defaultProps} onAddTechnique={onAddTechnique} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
     await user.type(screen.getByPlaceholderText('Technique name'), 'New Technique');
     await user.type(screen.getByPlaceholderText('Description'), 'How to do it');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddTechnique).toHaveBeenCalledWith('side-control', 'top', {
+    expect(props.techniqueHandlers.add).toHaveBeenCalledWith('side-control', 'top', {
       name: 'New Technique',
       description: 'How to do it',
       notes: [],
@@ -132,8 +144,8 @@ describe('PositionView', () => {
 
   it('adds technique to correct perspective', async () => {
     const user = userEvent.setup();
-    const onAddTechnique = vi.fn();
-    render(<PositionView {...defaultProps} onAddTechnique={onAddTechnique} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     // Switch to bottom tab
     await user.click(screen.getByRole('button', { name: 'Bottom' }));
@@ -142,30 +154,30 @@ describe('PositionView', () => {
     await user.type(screen.getByPlaceholderText('Technique name'), 'Bottom Technique');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddTechnique).toHaveBeenCalledWith('side-control', 'bottom', expect.anything());
+    expect(props.techniqueHandlers.add).toHaveBeenCalledWith('side-control', 'bottom', expect.anything());
   });
 
   it('rejects empty technique name', async () => {
     const user = userEvent.setup();
-    const onAddTechnique = vi.fn();
-    render(<PositionView {...defaultProps} onAddTechnique={onAddTechnique} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
     await user.type(screen.getByPlaceholderText('Description'), 'Some description');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddTechnique).not.toHaveBeenCalled();
+    expect(props.techniqueHandlers.add).not.toHaveBeenCalled();
   });
 
   it('shows "+ Add Note" button for notes section', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     expect(addNoteButtons.length).toBeGreaterThan(0);
   });
 
   it('opens note form when "+ Add Note" clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     // Find the add note button in the Notes section (last one)
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
@@ -174,22 +186,22 @@ describe('PositionView', () => {
     expect(screen.getByPlaceholderText('Add a note...')).toBeInTheDocument();
   });
 
-  it('calls onAddPerspectiveNote on submit', async () => {
+  it('calls noteHandlers.add on submit', async () => {
     const user = userEvent.setup();
-    const onAddPerspectiveNote = vi.fn();
-    render(<PositionView {...defaultProps} onAddPerspectiveNote={onAddPerspectiveNote} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addNoteButtons = screen.getAllByRole('button', { name: '+ Add Note' });
     await user.click(addNoteButtons[addNoteButtons.length - 1]);
     await user.type(screen.getByPlaceholderText('Add a note...'), 'New perspective note');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddPerspectiveNote).toHaveBeenCalledWith('side-control', 'top', 'New perspective note');
+    expect(props.noteHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'New perspective note');
   });
 
   it('shows "No notes yet" when perspective has no notes', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     await user.click(screen.getByRole('button', { name: 'Bottom' }));
 
@@ -198,7 +210,7 @@ describe('PositionView', () => {
 
   it('closes technique form on cancel', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
@@ -208,14 +220,14 @@ describe('PositionView', () => {
 
   // Do First CRUD tests
   it('shows "+ Add" button for Do First section', () => {
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     expect(addButtons.length).toBeGreaterThan(0);
   });
 
   it('opens Do First form when "+ Add" clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]); // First "+ Add" is for Do First
@@ -223,23 +235,23 @@ describe('PositionView', () => {
     expect(screen.getByPlaceholderText('Add a do first item...')).toBeInTheDocument();
   });
 
-  it('calls onAddDoFirst on submit', async () => {
+  it('calls doFirstHandlers.add on submit', async () => {
     const user = userEvent.setup();
-    const onAddDoFirst = vi.fn();
-    render(<PositionView {...defaultProps} onAddDoFirst={onAddDoFirst} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[0]);
     await user.type(screen.getByPlaceholderText('Add a do first item...'), 'New do first item');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddDoFirst).toHaveBeenCalledWith('side-control', 'top', 'New do first item');
+    expect(props.doFirstHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'New do first item');
   });
 
   // Transitions CRUD tests
   it('opens Transitions form when "+ Add" clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...defaultProps} />);
+    render(<PositionView {...createDefaultProps()} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]); // Second "+ Add" is for Transitions
@@ -247,16 +259,16 @@ describe('PositionView', () => {
     expect(screen.getByPlaceholderText('Add a transition...')).toBeInTheDocument();
   });
 
-  it('calls onAddTransition on submit', async () => {
+  it('calls transitionHandlers.add on submit', async () => {
     const user = userEvent.setup();
-    const onAddTransition = vi.fn();
-    render(<PositionView {...defaultProps} onAddTransition={onAddTransition} />);
+    const props = createDefaultProps();
+    render(<PositionView {...props} />);
 
     const addButtons = screen.getAllByRole('button', { name: '+ Add' });
     await user.click(addButtons[1]);
     await user.type(screen.getByPlaceholderText('Add a transition...'), 'New transition');
     await user.click(screen.getByRole('button', { name: 'Add' }));
 
-    expect(onAddTransition).toHaveBeenCalledWith('side-control', 'top', 'New transition');
+    expect(props.transitionHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'New transition');
   });
 });
