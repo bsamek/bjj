@@ -15,7 +15,7 @@ import {
 function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void }) {
   const { data, setData, loading, error } = useFirestore(userId);
   const [routeState, navigate] = useHashRouter();
-  const { currentView, selectedPositionId: routePositionId } = routeState;
+  const { currentView, selectedPositionId: routePositionId, perspective } = routeState;
   const selectedPositionId = data.positions.find((p) => p.id === routePositionId)
     ? routePositionId
     : currentView === 'position'
@@ -98,6 +98,8 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
           ) : selectedPosition ? (
             <PositionView
               position={selectedPosition}
+              perspective={perspective}
+              onPerspectiveChange={(newPerspective) => navigate('position', selectedPositionId, newPerspective)}
               doFirstHandlers={doFirstHandlers}
               transitionHandlers={transitionHandlers}
               noteHandlers={noteHandlers}

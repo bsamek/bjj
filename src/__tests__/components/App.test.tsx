@@ -310,7 +310,7 @@ describe('App - Mobile Menu', () => {
   });
 
   it('closes mobile menu and navigates to principles when clicking Principles', async () => {
-    window.location.hash = '#/position/side-control';
+    window.location.hash = '#/position/side-control/top';
     const user = userEvent.setup();
     await renderApp();
 
@@ -951,8 +951,8 @@ describe('App - URL Routing', () => {
     expect(screen.getByRole('heading', { name: 'Principles' })).toBeInTheDocument();
   });
 
-  it('shows position view when hash is #/position/side-control', async () => {
-    window.location.hash = '#/position/side-control';
+  it('shows position view when hash is #/position/side-control/top', async () => {
+    window.location.hash = '#/position/side-control/top';
     await renderApp();
     expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
   });
@@ -963,11 +963,11 @@ describe('App - URL Routing', () => {
 
     await user.click(screen.getByRole('button', { name: 'Side Control' }));
 
-    expect(window.location.hash).toBe('#/position/side-control');
+    expect(window.location.hash).toBe('#/position/side-control/top');
   });
 
   it('updates hash when navigating to principles', async () => {
-    window.location.hash = '#/position/mount';
+    window.location.hash = '#/position/mount/top';
     const user = userEvent.setup();
     await renderApp();
 
@@ -977,7 +977,7 @@ describe('App - URL Routing', () => {
   });
 
   it('falls back to first position if hash contains invalid position id', async () => {
-    window.location.hash = '#/position/invalid-id';
+    window.location.hash = '#/position/invalid-id/top';
     await renderApp();
 
     // Should fall back to first position (Closed Guard based on initial-data.ts)
@@ -1004,7 +1004,7 @@ describe('App - URL Routing', () => {
   });
 
   it('updates hash when clicking Principles button while on position view', async () => {
-    window.location.hash = '#/position/side-control';
+    window.location.hash = '#/position/side-control/top';
     const user = userEvent.setup();
     await renderApp();
 
@@ -1021,7 +1021,7 @@ describe('App - URL Routing', () => {
 
     // Navigate to Side Control
     await user.click(screen.getByRole('button', { name: 'Side Control' }));
-    expect(window.location.hash).toBe('#/position/side-control');
+    expect(window.location.hash).toBe('#/position/side-control/top');
 
     // Click Principles
     await user.click(screen.getByRole('button', { name: 'Principles' }));
@@ -1029,12 +1029,30 @@ describe('App - URL Routing', () => {
 
     // Simulate browser forward (going back to position)
     act(() => {
-      window.location.hash = '#/position/side-control';
+      window.location.hash = '#/position/side-control/top';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
     });
+  });
+
+  it('persists perspective (top/bottom) in URL', async () => {
+    window.location.hash = '#/position/side-control/bottom';
+    await renderApp();
+
+    // Should show bottom perspective content
+    expect(screen.getByText('Knee-Elbow Escape (Shrimp to Guard)')).toBeInTheDocument();
+  });
+
+  it('updates URL when switching perspective', async () => {
+    window.location.hash = '#/position/side-control/top';
+    const user = userEvent.setup();
+    await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Bottom' }));
+
+    expect(window.location.hash).toBe('#/position/side-control/bottom');
   });
 });

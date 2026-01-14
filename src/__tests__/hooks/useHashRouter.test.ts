@@ -11,13 +11,31 @@ describe('parseHash', () => {
     expect(parseHash('#/principles')).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
-  it('parses #/position/side-control as position view', () => {
+  it('parses #/position/side-control as position view with default top perspective', () => {
     expect(parseHash('#/position/side-control')).toEqual({
       currentView: 'position',
       selectedPositionId: 'side-control',
+      perspective: 'top',
+    });
+  });
+
+  it('parses #/position/side-control/top as position view with top perspective', () => {
+    expect(parseHash('#/position/side-control/top')).toEqual({
+      currentView: 'position',
+      selectedPositionId: 'side-control',
+      perspective: 'top',
+    });
+  });
+
+  it('parses #/position/side-control/bottom as position view with bottom perspective', () => {
+    expect(parseHash('#/position/side-control/bottom')).toEqual({
+      currentView: 'position',
+      selectedPositionId: 'side-control',
+      perspective: 'bottom',
     });
   });
 
@@ -25,6 +43,7 @@ describe('parseHash', () => {
     expect(parseHash('')).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -32,6 +51,7 @@ describe('parseHash', () => {
     expect(parseHash('#principles')).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -39,6 +59,7 @@ describe('parseHash', () => {
     expect(parseHash('#/position/')).toEqual({
       currentView: 'position',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -46,6 +67,7 @@ describe('parseHash', () => {
     expect(parseHash('#/position')).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 });
@@ -53,19 +75,25 @@ describe('parseHash', () => {
 describe('buildHash', () => {
   it('builds principles hash', () => {
     expect(
-      buildHash({ currentView: 'principles', selectedPositionId: null })
+      buildHash({ currentView: 'principles', selectedPositionId: null, perspective: 'top' })
     ).toBe('#/principles');
   });
 
-  it('builds position hash with id', () => {
+  it('builds position hash with id and perspective', () => {
     expect(
-      buildHash({ currentView: 'position', selectedPositionId: 'mount' })
-    ).toBe('#/position/mount');
+      buildHash({ currentView: 'position', selectedPositionId: 'mount', perspective: 'top' })
+    ).toBe('#/position/mount/top');
+  });
+
+  it('builds position hash with bottom perspective', () => {
+    expect(
+      buildHash({ currentView: 'position', selectedPositionId: 'mount', perspective: 'bottom' })
+    ).toBe('#/position/mount/bottom');
   });
 
   it('builds principles hash when position view has no id', () => {
     expect(
-      buildHash({ currentView: 'position', selectedPositionId: null })
+      buildHash({ currentView: 'position', selectedPositionId: null, perspective: 'top' })
     ).toBe('#/principles');
   });
 });
@@ -80,15 +108,17 @@ describe('useHashRouter', () => {
     expect(result.current[0]).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
   it('parses initial hash on mount', () => {
-    window.location.hash = '#/position/closed-guard';
+    window.location.hash = '#/position/closed-guard/bottom';
     const { result } = renderHook(() => useHashRouter());
     expect(result.current[0]).toEqual({
       currentView: 'position',
       selectedPositionId: 'closed-guard',
+      perspective: 'bottom',
     });
   });
 
@@ -99,15 +129,31 @@ describe('useHashRouter', () => {
       result.current[1]('position', 'side-control');
     });
 
-    expect(window.location.hash).toBe('#/position/side-control');
+    expect(window.location.hash).toBe('#/position/side-control/top');
     expect(result.current[0]).toEqual({
       currentView: 'position',
       selectedPositionId: 'side-control',
+      perspective: 'top',
+    });
+  });
+
+  it('updates hash when navigating to position with perspective', () => {
+    const { result } = renderHook(() => useHashRouter());
+
+    act(() => {
+      result.current[1]('position', 'side-control', 'bottom');
+    });
+
+    expect(window.location.hash).toBe('#/position/side-control/bottom');
+    expect(result.current[0]).toEqual({
+      currentView: 'position',
+      selectedPositionId: 'side-control',
+      perspective: 'bottom',
     });
   });
 
   it('updates hash when navigating to principles', () => {
-    window.location.hash = '#/position/mount';
+    window.location.hash = '#/position/mount/bottom';
     const { result } = renderHook(() => useHashRouter());
 
     act(() => {
@@ -118,6 +164,7 @@ describe('useHashRouter', () => {
     expect(result.current[0]).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -125,13 +172,14 @@ describe('useHashRouter', () => {
     const { result } = renderHook(() => useHashRouter());
 
     act(() => {
-      window.location.hash = '#/position/half-guard';
+      window.location.hash = '#/position/half-guard/bottom';
       window.dispatchEvent(new HashChangeEvent('hashchange'));
     });
 
     expect(result.current[0]).toEqual({
       currentView: 'position',
       selectedPositionId: 'half-guard',
+      perspective: 'bottom',
     });
   });
 
@@ -149,7 +197,7 @@ describe('useHashRouter', () => {
   });
 
   it('clears selectedPositionId when navigating to principles', () => {
-    window.location.hash = '#/position/mount';
+    window.location.hash = '#/position/mount/bottom';
     const { result } = renderHook(() => useHashRouter());
 
     act(() => {
@@ -159,6 +207,7 @@ describe('useHashRouter', () => {
     expect(result.current[0]).toEqual({
       currentView: 'principles',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -173,6 +222,7 @@ describe('useHashRouter', () => {
     expect(result.current[0]).toEqual({
       currentView: 'position',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 
@@ -187,6 +237,7 @@ describe('useHashRouter', () => {
     expect(result.current[0]).toEqual({
       currentView: 'position',
       selectedPositionId: null,
+      perspective: 'top',
     });
   });
 });
