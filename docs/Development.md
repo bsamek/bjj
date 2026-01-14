@@ -30,6 +30,35 @@ npm run test:run    # Run tests once
 npm run lint
 ```
 
+## Database
+
+### Prerequisites
+
+The database scripts require a Firebase service account file. Place `service-account.json` in the project root.
+
+### Dump Database
+
+Export all user data to a JSON file:
+
+```bash
+npm run db:dump              # Exports to db-dump.json
+npm run db:dump <filename>   # Exports to custom file
+```
+
+### Restore Database
+
+Import data from a JSON file:
+
+```bash
+npm run db:restore <filename>
+```
+
+### List Users
+
+```bash
+npm run db list-users
+```
+
 ## Deployment
 
 ```bash
