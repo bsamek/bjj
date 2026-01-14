@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { onAuthStateChanged, type User } from 'firebase/auth';
@@ -21,6 +21,7 @@ async function renderApp() {
 describe('App', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     // Mock onAuthStateChanged to immediately call callback with a fake user
@@ -208,6 +209,7 @@ describe('App', () => {
 describe('App - Error and Loading States', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
@@ -238,6 +240,7 @@ describe('App - Error and Loading States', () => {
 describe('App - Mobile Menu', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
@@ -305,11 +308,30 @@ describe('App - Mobile Menu', () => {
     // Menu should close
     expect(document.querySelector('.bg-black\\/50')).not.toBeInTheDocument();
   });
+
+  it('closes mobile menu and navigates to principles when clicking Principles', async () => {
+    window.location.hash = '#/position/side-control';
+    const user = userEvent.setup();
+    await renderApp();
+
+    // Open mobile menu
+    const menuButton = screen.getByRole('button', { name: /menu/i });
+    await user.click(menuButton);
+
+    // Click Principles in the mobile sidebar
+    const principlesButtons = screen.getAllByRole('button', { name: 'Principles' });
+    await user.click(principlesButtons[principlesButtons.length - 1]);
+
+    // Menu should close and navigate to principles
+    expect(document.querySelector('.bg-black\\/50')).not.toBeInTheDocument();
+    expect(window.location.hash).toBe('#/principles');
+  });
 });
 
 describe('App - Handler Coverage', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
@@ -633,6 +655,7 @@ describe('App - Handler Coverage', () => {
 describe('App - Edge Cases', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
@@ -828,6 +851,7 @@ describe('App - Edge Cases', () => {
 describe('App Integration', () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.location.hash = '';
     vi.clearAllMocks();
 
     // Mock onAuthStateChanged to immediately call callback with a fake user
@@ -888,5 +912,129 @@ describe('App Integration', () => {
     const savedData = lastCall[1] as { positions: Array<{ id: string; top: { techniques: Array<{ name: string }> } }> };
     const halfGuard = savedData.positions.find((p) => p.id === 'half-guard');
     expect(halfGuard?.top.techniques.some((t) => t.name === 'Test Sweep')).toBe(true);
+  });
+});
+
+describe('App - URL Routing', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    window.location.hash = '';
+    vi.clearAllMocks();
+
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      if (typeof callback === 'function') {
+        callback({ uid: 'test-user-123', email: 'test@example.com' } as User);
+      }
+      return () => {};
+    });
+
+    vi.mocked(onSnapshot).mockImplementation(((...args: unknown[]) => {
+      const onNext = args[1] as ((snapshot: DocumentSnapshot<AppData>) => void) | undefined;
+      if (typeof onNext === 'function') {
+        onNext({
+          exists: () => true,
+          data: () => initialData,
+        } as unknown as DocumentSnapshot<AppData>);
+      }
+      return () => {};
+    }) as typeof onSnapshot);
+  });
+
+  it('shows principles view when hash is empty', async () => {
+    await renderApp();
+    expect(screen.getByRole('heading', { name: 'Principles' })).toBeInTheDocument();
+  });
+
+  it('shows principles view when hash is #/principles', async () => {
+    window.location.hash = '#/principles';
+    await renderApp();
+    expect(screen.getByRole('heading', { name: 'Principles' })).toBeInTheDocument();
+  });
+
+  it('shows position view when hash is #/position/side-control', async () => {
+    window.location.hash = '#/position/side-control';
+    await renderApp();
+    expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
+  });
+
+  it('updates hash when navigating to position', async () => {
+    const user = userEvent.setup();
+    await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
+
+    expect(window.location.hash).toBe('#/position/side-control');
+  });
+
+  it('updates hash when navigating to principles', async () => {
+    window.location.hash = '#/position/mount';
+    const user = userEvent.setup();
+    await renderApp();
+
+    await user.click(screen.getByRole('button', { name: 'Principles' }));
+
+    expect(window.location.hash).toBe('#/principles');
+  });
+
+  it('falls back to first position if hash contains invalid position id', async () => {
+    window.location.hash = '#/position/invalid-id';
+    await renderApp();
+
+    // Should fall back to first position (Closed Guard based on initial-data.ts)
+    expect(screen.getByRole('heading', { name: 'Closed Guard' })).toBeInTheDocument();
+  });
+
+  it('responds to browser back/forward navigation', async () => {
+    const user = userEvent.setup();
+    await renderApp();
+
+    // Navigate to position
+    await user.click(screen.getByRole('button', { name: 'Mount' }));
+    expect(screen.getByRole('heading', { name: 'Mount' })).toBeInTheDocument();
+
+    // Simulate browser back button by changing hash and firing event
+    act(() => {
+      window.location.hash = '#/principles';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Principles' })).toBeInTheDocument();
+    });
+  });
+
+  it('updates hash when clicking Principles button while on position view', async () => {
+    window.location.hash = '#/position/side-control';
+    const user = userEvent.setup();
+    await renderApp();
+
+    // Click Principles button
+    await user.click(screen.getByRole('button', { name: 'Principles' }));
+
+    expect(window.location.hash).toBe('#/principles');
+    expect(screen.getByRole('heading', { name: 'Principles' })).toBeInTheDocument();
+  });
+
+  it('preserves position when clicking Principles then back to position view', async () => {
+    const user = userEvent.setup();
+    await renderApp();
+
+    // Navigate to Side Control
+    await user.click(screen.getByRole('button', { name: 'Side Control' }));
+    expect(window.location.hash).toBe('#/position/side-control');
+
+    // Click Principles
+    await user.click(screen.getByRole('button', { name: 'Principles' }));
+    expect(window.location.hash).toBe('#/principles');
+
+    // Simulate browser forward (going back to position)
+    act(() => {
+      window.location.hash = '#/position/side-control';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Side Control' })).toBeInTheDocument();
+    });
   });
 });
