@@ -7,9 +7,12 @@ import { Button } from './ui/Button';
 import { AddItemForm } from './ui/AddItemForm';
 
 type AddingSection = 'technique' | 'note' | 'doFirst' | 'transition' | null;
+type Perspective = 'top' | 'bottom';
 
 interface PositionViewProps {
   position: Position;
+  perspective: Perspective;
+  onPerspectiveChange: (perspective: Perspective) => void;
   doFirstHandlers: ArrayHandlers;
   transitionHandlers: ArrayHandlers;
   noteHandlers: ArrayHandlers;
@@ -18,16 +21,17 @@ interface PositionViewProps {
 
 export function PositionView({
   position,
+  perspective: activeTab,
+  onPerspectiveChange: setActiveTab,
   doFirstHandlers,
   transitionHandlers,
   noteHandlers,
   techniqueHandlers,
 }: PositionViewProps) {
-  const [activeTab, setActiveTab] = useState<'top' | 'bottom'>('top');
   const [addingSection, setAddingSection] = useState<AddingSection>(null);
   const [newTechnique, setNewTechnique] = useState({ name: '', description: '' });
 
-  const perspective = position[activeTab];
+  const perspectiveData = position[activeTab];
 
   const handleAddTechnique = () => {
     if (newTechnique.name.trim()) {
@@ -91,9 +95,9 @@ export function PositionView({
           />
         )}
 
-        {perspective.doFirst.length > 0 ? (
+        {perspectiveData.doFirst.length > 0 ? (
           <ul className="space-y-1">
-            {perspective.doFirst.map((item, idx) => (
+            {perspectiveData.doFirst.map((item, idx) => (
               <EditableItem
                 key={idx}
                 value={item}
@@ -147,7 +151,7 @@ export function PositionView({
         )}
 
         <div className="space-y-3">
-          {perspective.techniques.map((technique) => (
+          {perspectiveData.techniques.map((technique) => (
             <TechniqueCard
               key={technique.id}
               technique={technique}
@@ -193,9 +197,9 @@ export function PositionView({
           />
         )}
 
-        {perspective.transitions.length > 0 ? (
+        {perspectiveData.transitions.length > 0 ? (
           <ul className="space-y-1">
-            {perspective.transitions.map((item, idx) => (
+            {perspectiveData.transitions.map((item, idx) => (
               <EditableItem
                 key={idx}
                 value={item}
@@ -235,9 +239,9 @@ export function PositionView({
           />
         )}
 
-        {perspective.notes.length > 0 ? (
+        {perspectiveData.notes.length > 0 ? (
           <ul className="space-y-2">
-            {perspective.notes.map((note, idx) => (
+            {perspectiveData.notes.map((note, idx) => (
               <EditableItem
                 key={idx}
                 value={note}

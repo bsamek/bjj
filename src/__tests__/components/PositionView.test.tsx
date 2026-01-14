@@ -53,8 +53,10 @@ const createMockHandlers = () => ({
 });
 
 describe('PositionView', () => {
-  const createDefaultProps = () => ({
+  const createDefaultProps = (overrides: { perspective?: 'top' | 'bottom'; onPerspectiveChange?: (p: 'top' | 'bottom') => void } = {}) => ({
     position: mockPosition,
+    perspective: overrides.perspective ?? 'top' as const,
+    onPerspectiveChange: overrides.onPerspectiveChange ?? vi.fn(),
     ...createMockHandlers(),
   });
 
@@ -75,11 +77,18 @@ describe('PositionView', () => {
     expect(screen.getByText('Americana')).toBeInTheDocument();
   });
 
-  it('switches to Bottom tab when clicked', async () => {
+  it('calls onPerspectiveChange when Bottom tab clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...createDefaultProps()} />);
+    const onPerspectiveChange = vi.fn();
+    render(<PositionView {...createDefaultProps({ onPerspectiveChange })} />);
 
     await user.click(screen.getByRole('button', { name: 'Bottom' }));
+
+    expect(onPerspectiveChange).toHaveBeenCalledWith('bottom');
+  });
+
+  it('renders bottom perspective content when perspective is bottom', () => {
+    render(<PositionView {...createDefaultProps({ perspective: 'bottom' })} />);
 
     expect(screen.getByText('Frame on neck and hip')).toBeInTheDocument();
     expect(screen.getByText('Knee-Elbow Escape')).toBeInTheDocument();
@@ -144,11 +153,8 @@ describe('PositionView', () => {
 
   it('adds technique to correct perspective', async () => {
     const user = userEvent.setup();
-    const props = createDefaultProps();
+    const props = createDefaultProps({ perspective: 'bottom' });
     render(<PositionView {...props} />);
-
-    // Switch to bottom tab
-    await user.click(screen.getByRole('button', { name: 'Bottom' }));
 
     await user.click(screen.getByRole('button', { name: '+ Add Technique' }));
     await user.type(screen.getByPlaceholderText('Technique name'), 'Bottom Technique');
@@ -199,11 +205,8 @@ describe('PositionView', () => {
     expect(props.noteHandlers.add).toHaveBeenCalledWith('side-control', 'top', 'New perspective note');
   });
 
-  it('shows "No notes yet" when perspective has no notes', async () => {
-    const user = userEvent.setup();
-    render(<PositionView {...createDefaultProps()} />);
-
-    await user.click(screen.getByRole('button', { name: 'Bottom' }));
+  it('shows "No notes yet" when perspective has no notes', () => {
+    render(<PositionView {...createDefaultProps({ perspective: 'bottom' })} />);
 
     expect(screen.getByText('No notes yet')).toBeInTheDocument();
   });
@@ -437,15 +440,15 @@ describe('PositionView', () => {
   });
 
   // Tab click when already active
-  it('allows clicking Top tab when already on Top', async () => {
+  it('calls onPerspectiveChange when Top tab clicked', async () => {
     const user = userEvent.setup();
-    render(<PositionView {...createDefaultProps()} />);
+    const onPerspectiveChange = vi.fn();
+    render(<PositionView {...createDefaultProps({ onPerspectiveChange })} />);
 
     // Default is Top, click Top again
     await user.click(screen.getByRole('button', { name: 'Top' }));
 
-    // Should still show top content
-    expect(screen.getByText('Crossface + far underhook')).toBeInTheDocument();
+    expect(onPerspectiveChange).toHaveBeenCalledWith('top');
   });
 
   // Technique CRUD callback tests

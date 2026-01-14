@@ -5,6 +5,7 @@ import { PositionView } from './components/PositionView';
 import { PrinciplesView } from './components/PrinciplesView';
 import { AuthGate } from './components/AuthGate';
 import { useFirestore } from './hooks/useFirestore';
+import { useHashRouter } from './hooks/useHashRouter';
 import {
   createArrayHandlers,
   createTechniqueHandlers,
@@ -13,10 +14,13 @@ import {
 
 function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void }) {
   const { data, setData, loading, error } = useFirestore(userId);
-  const [currentView, setCurrentView] = useState<'principles' | 'position'>('principles');
-  const [selectedPositionId, setSelectedPositionId] = useState<string | null>(
-    data.positions[0]?.id || null
-  );
+  const [routeState, navigate] = useHashRouter();
+  const { currentView, selectedPositionId: routePositionId, perspective } = routeState;
+  const selectedPositionId = data.positions.find((p) => p.id === routePositionId)
+    ? routePositionId
+    : currentView === 'position'
+      ? (data.positions[0]?.id ?? null)
+      : null;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const selectedPosition = data.positions.find((p) => p.id === selectedPositionId);
@@ -58,8 +62,8 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
             positions={data.positions}
             currentView={currentView}
             selectedPositionId={selectedPositionId}
-            onViewChange={setCurrentView}
-            onPositionSelect={setSelectedPositionId}
+            onViewChange={(view) => { if (view === 'principles') navigate('principles'); }}
+            onPositionSelect={(positionId) => navigate('position', positionId)}
           />
         </div>
 
@@ -75,8 +79,8 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
                 positions={data.positions}
                 currentView={currentView}
                 selectedPositionId={selectedPositionId}
-                onViewChange={setCurrentView}
-                onPositionSelect={setSelectedPositionId}
+                onViewChange={(view) => { if (view === 'principles') navigate('principles'); }}
+                onPositionSelect={(positionId) => navigate('position', positionId)}
                 onClose={() => setIsMobileMenuOpen(false)}
               />
             </div>
@@ -94,6 +98,8 @@ function AppContent({ userId, onLogout }: { userId: string; onLogout: () => void
           ) : selectedPosition ? (
             <PositionView
               position={selectedPosition}
+              perspective={perspective}
+              onPerspectiveChange={(newPerspective) => navigate('position', selectedPositionId, newPerspective)}
               doFirstHandlers={doFirstHandlers}
               transitionHandlers={transitionHandlers}
               noteHandlers={noteHandlers}
